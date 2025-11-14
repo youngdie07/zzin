@@ -1,0 +1,23 @@
+{
+  "name": "zzin",
+  "version": "1.0.0",
+  "description": "오스틴 한인 맛집 앱",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "mobile",
+    "shared"
+  ],
+  "scripts": {
+    "backend": "cd backend && npm run dev",
+    "mobile": "cd mobile && npm start"
+  },
+  "keywords": [
+    "restaurant",
+    "korean",
+    "austin",
+    "reviews"
+  ],
+  "author": "",
+  "license": "MIT"
+}

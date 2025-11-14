@@ -1,0 +1,129 @@
+// Prisma Schema for ZZIN App
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 사용자
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password      String
+  name          String
+  profileImage  String?
+  phoneNumber   String?
+  isKorean      Boolean   @default(true) // 한국인 인증
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  reviews       Review[]
+  bookmarks     Bookmark[]
+
+  @@map("users")
+}
+
+// 음식점
+model Restaurant {
+  id              String    @id @default(uuid())
+  name            String
+  nameKorean      String?   // 한글 이름
+  address         String
+  latitude        Float
+  longitude       Float
+  phoneNumber     String?
+  cuisineType     String    // 음식 종류 (한식, 중식, 일식, 양식 등)
+  priceRange      Int       @default(2) // 1-4 ($ - $$$$)
+  googlePlaceId   String?   @unique // Google Maps 연동
+  website         String?
+  hours           Json?     // 영업시간
+  images          String[]  // 이미지 URL 배열
+  description     String?
+  isVerified      Boolean   @default(false) // 검증된 정보
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  reviews         Review[]
+  tags            RestaurantTag[]
+  bookmarks       Bookmark[]
+
+  @@map("restaurants")
+}
+
+// 리뷰
+model Review {
+  id              String      @id @default(uuid())
+  userId          String
+  restaurantId    String
+  rating          Float       // 1-5 별점
+  content         String
+  images          String[]    // 리뷰 이미지들
+
+  // 한국인 맞춤 평가 항목들
+  tasteRating     Float?      // 맛 평가
+  serviceRating   Float?      // 서비스 평가
+  atmosphereRating Float?     // 분위기 평가
+
+  // 특별 추천 사항
+  goodForFamily   Boolean     @default(false) // 가족 동반 추천
+  noDiscrimination Boolean    @default(true)  // 차별 없음
+  authenticKorean Boolean     @default(false) // 정통 한식
+  koreanFriendly  Boolean     @default(false) // 한국인 친화적
+
+  likes           Int         @default(0)
+  isHelpful       Int         @default(0) // 도움됨 카운트
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  restaurant      Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@map("reviews")
+}
+
+// 태그/카테고리
+model Tag {
+  id              String    @id @default(uuid())
+  name            String    @unique
+  nameKorean      String    // 한글 태그명
+  description     String?
+  icon            String?   // 아이콘 이름
+  category        String    // 카테고리 (상황, 음식종류, 특징 등)
+
+  restaurants     RestaurantTag[]
+
+  @@map("tags")
+}
+
+// 음식점-태그 매핑
+model RestaurantTag {
+  restaurantId    String
+  tagId           String
+  count           Int       @default(0) // 이 태그를 붙인 사람 수
+
+  restaurant      Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  tag             Tag        @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([restaurantId, tagId])
+  @@map("restaurant_tags")
+}
+
+// 북마크/즐겨찾기
+model Bookmark {
+  id              String      @id @default(uuid())
+  userId          String
+  restaurantId    String
+  note            String?     // 개인 메모
+  createdAt       DateTime    @default(now())
+
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  restaurant      Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, restaurantId])
+  @@map("bookmarks")
+}
