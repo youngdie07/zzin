@@ -5,7 +5,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -41,7 +41,7 @@ model Restaurant {
   googlePlaceId   String?   @unique // Google Maps 연동
   website         String?
   hours           Json?     // 영업시간
-  images          String[]  // 이미지 URL 배열
+  images          String?  // 이미지 URL 배열
   description     String?
   isVerified      Boolean   @default(false) // 검증된 정보
   createdAt       DateTime  @default(now())
@@ -61,7 +61,7 @@ model Review {
   restaurantId    String
   rating          Float       // 1-5 별점
   content         String
-  images          String[]    // 리뷰 이미지들
+  images          String?    // 리뷰 이미지들
 
   // 한국인 맞춤 평가 항목들
   tasteRating     Float?      // 맛 평가
