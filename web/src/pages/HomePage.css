@@ -1,0 +1,164 @@
+.home-page {
+  min-height: 100vh;
+}
+
+.categories {
+  display: flex;
+  gap: 12px;
+  padding: 16px 0;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border-color);
+  background: white;
+  margin-bottom: 16px;
+}
+
+.category-btn {
+  padding: 8px 20px;
+  border-radius: 20px;
+  background: var(--bg-light);
+  color: var(--text-medium);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+}
+
+.category-btn.active {
+  background: var(--primary-color);
+  color: white;
+}
+
+.category-btn:hover {
+  background: var(--primary-color);
+  color: white;
+}
+
+.korean-filters {
+  display: flex;
+  gap: 8px;
+  padding: 16px 0;
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+
+.filter-chip {
+  padding: 6px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+  font-size: 13px;
+  white-space: nowrap;
+  background: white;
+}
+
+.restaurants-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.restaurant-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.restaurant-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+}
+
+.restaurant-image {
+  width: 100%;
+  height: 200px;
+  background-size: cover;
+  background-position: center;
+  background-color: var(--bg-light);
+}
+
+.restaurant-info {
+  padding: 16px;
+}
+
+.restaurant-name {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--text-dark);
+  margin-bottom: 4px;
+}
+
+.restaurant-name-korean {
+  font-size: 14px;
+  color: var(--text-medium);
+  margin-bottom: 8px;
+}
+
+.restaurant-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.star {
+  font-size: 16px;
+}
+
+.rating {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--text-dark);
+}
+
+.review-count {
+  font-size: 14px;
+  color: var(--text-light);
+}
+
+.restaurant-meta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.cuisine {
+  font-size: 14px;
+  color: var(--text-medium);
+}
+
+.price {
+  font-size: 14px;
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+.korean-stats {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.stat-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: var(--bg-light);
+  font-size: 12px;
+  color: var(--text-medium);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-light);
+}
+
+@media (max-width: 768px) {
+  .restaurants-grid {
+    grid-template-columns: 1fr;
+  }
+}

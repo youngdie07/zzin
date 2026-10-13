@@ -35,6 +35,7 @@ ZZIN은 오스틴 지역의 모든 음식점을 대상으로 하되, 한국인�
 
 ```
 zzin/
+├── web/              # React 웹 앱 (브라우저에서 바로 실행)
 ├── mobile/           # React Native 앱
 ├── backend/          # Node.js API 서버
 ├── shared/           # 공통 타입 정의
