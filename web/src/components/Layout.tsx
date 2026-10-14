@@ -1,4 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
+import { authService } from '../services/auth.service';
 import './Layout.css';
 
 function Layout() {
@@ -19,7 +20,11 @@ function Layout() {
           <nav className="nav">
             <Link to="/search" className="nav-link">검색</Link>
             <Link to="/bookmarks" className="nav-link">북마크</Link>
-            <Link to="/my-page" className="nav-link">마이페이지</Link>
+            {authService.isAuthenticated() ? (
+              <Link to="/my-page" className="nav-link">마이페이지</Link>
+            ) : (
+              <Link to="/login" className="nav-link">로그인</Link>
+            )}
           </nav>
         </div>
       </header>

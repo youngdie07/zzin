@@ -10,6 +10,7 @@ import BookmarksPage from './pages/BookmarksPage';
 import MyPage from './pages/MyPage';
 import ReviewWritePage from './pages/ReviewWritePage';
 import './styles/globals.css';
+import './styles/app.css';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = authService.isAuthenticated();

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../config/database';
 import { AuthRequest } from '../middleware/auth.middleware';
+import { parseImages, serializeImages } from '../utils/images';
 
 // 리뷰 생성
 export const createReview = async (req: AuthRequest, res: Response) => {
@@ -48,7 +49,7 @@ export const createReview = async (req: AuthRequest, res: Response) => {
         restaurantId,
         rating: parseFloat(rating),
         content,
-        images: images || [],
+        images: serializeImages(images),
         tasteRating: tasteRating ? parseFloat(tasteRating) : null,
         serviceRating: serviceRating ? parseFloat(serviceRating) : null,
         atmosphereRating: atmosphereRating ? parseFloat(atmosphereRating) : null,
@@ -110,6 +111,7 @@ export const updateReview = async (req: AuthRequest, res: Response) => {
       where: { id },
       data: {
         ...updateData,
+        images: updateData.images !== undefined ? serializeImages(updateData.images) : review.images,
         rating: updateData.rating ? parseFloat(updateData.rating) : review.rating,
         tasteRating: updateData.tasteRating ? parseFloat(updateData.tasteRating) : review.tasteRating,
         serviceRating: updateData.serviceRating ? parseFloat(updateData.serviceRating) : review.serviceRating,
@@ -189,7 +191,7 @@ export const getUserReviews = async (req: AuthRequest, res: Response) => {
       }
     });
 
-    res.json(reviews);
+    res.json(reviews.map((r) => ({ ...r, images: parseImages(r.images) })));
   } catch (error) {
     console.error('Get user reviews error:', error);
     res.status(500).json({ error: '리뷰 목록 조회 중 오류가 발생했습니다.' });
@@ -235,7 +237,7 @@ export const getRestaurantReviews = async (req: Request, res: Response) => {
     });
 
     res.json({
-      reviews,
+      reviews: reviews.map((r) => ({ ...r, images: parseImages(r.images) })),
       pagination: {
         page: parseInt(page as string),
         limit: parseInt(limit as string),

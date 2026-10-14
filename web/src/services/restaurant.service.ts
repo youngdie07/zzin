@@ -3,7 +3,7 @@ import { Restaurant, RestaurantsResponse, Bookmark } from '../types';
 
 export const restaurantService = {
   // 음식점 목록 조회
-  async getRestaurants(params?: {
+  async getRestaurants(params?: Record<string, unknown> | {
     search?: string;
     cuisineType?: string;
     priceRange?: number;

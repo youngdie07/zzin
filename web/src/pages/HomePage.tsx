@@ -1,123 +1,109 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Restaurant } from '../types';
 import { restaurantService } from '../services/restaurant.service';
-import './HomePage.css';
+import RestaurantCard from '../components/RestaurantCard';
+import { CUISINES, KOREAN_TAGS, getCuisineStyle } from '../utils/cuisine';
 
 function HomePage() {
+  const navigate = useNavigate();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState('전체');
-
-  const categories = [
-    { id: 'all', name: '전체' },
-    { id: '한식', name: '한식' },
-    { id: '양식', name: '양식' },
-    { id: '일식', name: '일식' },
-    { id: '중식', name: '중식' },
-    { id: '태국', name: '태국' },
-  ];
+  const [cuisine, setCuisine] = useState('전체');
+  const [activeTags, setActiveTags] = useState<string[]>([]);
+  const [sort, setSort] = useState('rating');
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
-    loadRestaurants();
-  }, [selectedCategory]);
+    const params: Record<string, unknown> = { sort, limit: 50 };
+    if (cuisine !== '전체') params.cuisineType = cuisine;
+    activeTags.forEach((t) => (params[t] = true));
 
-  const loadRestaurants = async () => {
-    try {
-      setLoading(true);
-      const response = await restaurantService.getRestaurants({
-        cuisineType: selectedCategory === '전체' ? undefined : selectedCategory,
-        limit: 20,
-      });
-      setRestaurants(response.restaurants);
-    } catch (error) {
-      console.error('Failed to load restaurants:', error);
-    } finally {
-      setLoading(false);
-    }
+    setLoading(true);
+    restaurantService
+      .getRestaurants(params)
+      .then((res) => setRestaurants(res.restaurants))
+      .catch((e) => console.error(e))
+      .finally(() => setLoading(false));
+  }, [cuisine, activeTags, sort]);
+
+  const toggleTag = (param: string) =>
+    setActiveTags((prev) => (prev.includes(param) ? prev.filter((t) => t !== param) : [...prev, param]));
+
+  const onSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    navigate(`/search?q=${encodeURIComponent(query)}`);
   };
 
-  if (loading) {
-    return (
-      <div className="loading">
-        <div className="spinner"></div>
-      </div>
-    );
-  }
-
   return (
-    <div className="home-page">
+    <div>
+      <section className="hero">
+        <div className="container">
+          <p className="hero-eyebrow">AUSTIN, TX · 한인 전용 맛집 평가</p>
+          <h2>
+            미국 평점 말고,
+            <br />
+            <span>한국인이 직접 먹어본</span> 오스틴 맛집
+          </h2>
+          <p className="hero-desc">한식이든 아니든 상관없어요. 한국인 입맛과 상황에 맞는지만 봅니다.</p>
+          <form className="hero-search" onSubmit={onSearch}>
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="식당 이름, 음식 종류로 검색 (예: 라멘, 국밥)"
+            />
+            <button type="submit">검색</button>
+          </form>
+        </div>
+      </section>
+
       <div className="container">
-        {/* 카테고리 필터 */}
-        <div className="categories">
-          {categories.map((category) => (
+        <h3 className="section-title">어떤 상황이세요?</h3>
+        <div className="situation-grid">
+          {KOREAN_TAGS.map((t) => (
             <button
-              key={category.id}
-              className={`category-btn ${selectedCategory === category.name ? 'active' : ''}`}
-              onClick={() => setSelectedCategory(category.name)}
+              key={t.param}
+              className={`situation ${activeTags.includes(t.param) ? 'on' : ''}`}
+              onClick={() => toggleTag(t.param)}
             >
-              {category.name}
+              <span className="situation-emoji">{t.emoji}</span>
+              <strong>{t.label}</strong>
+              <small>{t.desc}</small>
             </button>
           ))}
         </div>
 
-        {/* 한국인 맞춤 필터 */}
-        <div className="korean-filters">
-          <div className="filter-chip">👨‍👩‍👧‍👦 가족 동반 추천</div>
-          <div className="filter-chip">🛡️ 차별 없음</div>
-          <div className="filter-chip">✅ 정통 한식</div>
-          <div className="filter-chip">❤️ 한국인 친화적</div>
-        </div>
-
-        {/* 음식점 목록 */}
-        <div className="restaurants-grid">
-          {restaurants.map((restaurant) => (
-            <Link
-              key={restaurant.id}
-              to={`/restaurant/${restaurant.id}`}
-              className="restaurant-card"
-            >
-              <div
-                className="restaurant-image"
-                style={{
-                  backgroundImage: `url(${restaurant.images?.[0] || 'https://via.placeholder.com/400x300'})`,
-                }}
-              />
-              <div className="restaurant-info">
-                <h3 className="restaurant-name">{restaurant.name}</h3>
-                {restaurant.nameKorean && (
-                  <p className="restaurant-name-korean">{restaurant.nameKorean}</p>
-                )}
-                <div className="restaurant-rating">
-                  <span className="star">⭐</span>
-                  <span className="rating">{restaurant.avgRating?.toFixed(1) || '0.0'}</span>
-                  <span className="review-count">({restaurant.reviewCount || 0})</span>
-                </div>
-                <div className="restaurant-meta">
-                  <span className="cuisine">{restaurant.cuisineType}</span>
-                  <span className="price">{'$'.repeat(restaurant.priceRange || 2)}</span>
-                </div>
-
-                {/* 한국인 통계 */}
-                {restaurant.koreanStats && (
-                  <div className="korean-stats">
-                    {restaurant.koreanStats.goodForFamilyCount > 0 && (
-                      <span className="stat-badge">👨‍👩‍👧‍👦 {restaurant.koreanStats.goodForFamilyCount}</span>
-                    )}
-                    {restaurant.koreanStats.authenticKoreanCount > 0 && (
-                      <span className="stat-badge">✅ {restaurant.koreanStats.authenticKoreanCount}</span>
-                    )}
-                  </div>
-                )}
-              </div>
-            </Link>
+        <div className="chip-row">
+          {CUISINES.map((c) => (
+            <button key={c} className={`chip ${cuisine === c ? 'on' : ''}`} onClick={() => setCuisine(c)}>
+              {c !== '전체' && getCuisineStyle(c).emoji} {c}
+            </button>
           ))}
         </div>
 
-        {restaurants.length === 0 && !loading && (
-          <div className="empty-state">
-            <p>음식점이 없습니다</p>
+        <div className="list-head">
+          <h3 className="section-title" style={{ margin: 0 }}>
+            {loading ? '불러오는 중...' : `${restaurants.length}곳`}
+          </h3>
+          <select value={sort} onChange={(e) => setSort(e.target.value)} className="select">
+            <option value="rating">한인 평점순</option>
+            <option value="reviews">리뷰 많은순</option>
+            <option value="recent">최신 등록순</option>
+          </select>
+        </div>
+
+        {loading ? (
+          <div className="loading">
+            <div className="spinner"></div>
           </div>
+        ) : restaurants.length ? (
+          <div className="r-grid">
+            {restaurants.map((r) => (
+              <RestaurantCard key={r.id} restaurant={r} />
+            ))}
+          </div>
+        ) : (
+          <div className="empty">조건에 맞는 식당이 아직 없어요. 필터를 줄여보세요.</div>
         )}
       </div>
     </div>
