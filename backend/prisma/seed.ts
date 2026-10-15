@@ -1,6 +1,7 @@
-// 샘플 데이터: 가상의 음식점/리뷰입니다 (실제 업체와 무관)
+// 기본: 실제 오스틴 한식당(리뷰 없음). SEED_DEMO=1 이면 가상의 샘플 식당/리뷰도 추가 (실제 업체와 무관)
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { realRestaurants } from './data/austin-korean-restaurants';
 
 const prisma = new PrismaClient();
 
@@ -16,6 +17,7 @@ interface Seed {
   cuisine: string;
   price: number;
   description: string;
+  phone?: string;
   reviews: Rev[];
 }
 
@@ -25,7 +27,7 @@ const users = [
   ['sejin@zzin.app', '오세진'], ['haneul@zzin.app', '윤하늘']
 ];
 
-const restaurants: Seed[] = [
+const demoRestaurants: Seed[] = [
   {
     name: 'Seoul Jeong', nameKorean: '서울정', address: '2400 W Anderson Ln, Austin, TX', lat: 30.3545, lng: -97.7312,
     cuisine: '한식', price: 2,
@@ -185,6 +187,14 @@ async function main() {
     createdUsers.push(await prisma.user.create({ data: { email, name, password, isKorean: true } }));
   }
 
+  const demo = process.env.SEED_DEMO
+    ? demoRestaurants.map((d) => ({
+        ...d,
+        phone: '(512) 555-' + String(Math.floor(100 + Math.random() * 900)).padStart(4, '0')
+      }))
+    : [];
+  const restaurants: Seed[] = [...realRestaurants, ...demo];
+
   for (const r of restaurants) {
     const restaurant = await prisma.restaurant.create({
       data: {
@@ -193,7 +203,7 @@ async function main() {
         address: r.address,
         latitude: r.lat,
         longitude: r.lng,
-        phoneNumber: '(512) 555-' + String(Math.floor(100 + Math.random() * 900)).padStart(4, '0'),
+        phoneNumber: r.phone ?? null,
         cuisineType: r.cuisine,
         priceRange: r.price,
         description: r.description,
