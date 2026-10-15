@@ -1,16 +1,22 @@
 import { Link } from 'react-router-dom';
 import { Restaurant } from '../types';
-import { getCuisineStyle, KOREAN_TAGS } from '../utils/cuisine';
+import { findKeyword, findOption, getCuisineStyle, KOREAN_TAGS, PROFILE_KEYS } from '../utils/cuisine';
 
 function RestaurantCard({ restaurant: r }: { restaurant: Restaurant }) {
   const style = getCuisineStyle(r.cuisineType);
   const total = r.koreanStats?.totalReviews || 0;
-  const badges = KOREAN_TAGS.map((t) => ({
-    ...t,
-    pct: total ? Math.round(((r.koreanStats as any)[t.statKey] / total) * 100) : 0,
-  }))
+
+  const profileBadges = PROFILE_KEYS.map((k) => {
+    const d = r.profile?.[k];
+    if (!d?.top || d.total < 1 || d.counts[d.top] / d.total < 0.5) return null;
+    const o = findOption(k, d.top);
+    return o ? { key: k, text: `${o.emoji} ${o.short}`, pct: Math.round((d.counts[d.top] / d.total) * 100) } : null;
+  }).filter(Boolean) as { key: string; text: string; pct: number }[];
+
+  const situationBadges = KOREAN_TAGS.filter((t) => t.param !== 'authenticKorean')
+    .map((t) => ({ ...t, pct: total ? Math.round(((r.koreanStats as any)[t.statKey] / total) * 100) : 0 }))
     .filter((t) => t.pct >= 60)
-    .slice(0, 3);
+    .slice(0, Math.max(0, 4 - profileBadges.length));
 
   return (
     <Link to={`/restaurant/${r.id}`} className="r-card">
@@ -35,13 +41,30 @@ function RestaurantCard({ restaurant: r }: { restaurant: Restaurant }) {
           <span className="r-star">★</span>
           <strong>{r.reviewCount ? r.avgRating.toFixed(1) : '-'}</strong>
           <span className="r-muted">한인 리뷰 {r.reviewCount}개</span>
+          {r.bookmarkCount > 0 && <span className="r-muted">· ☆ {r.bookmarkCount}</span>}
         </div>
         <div className="r-card-badges">
-          {badges.map((b) => (
-            <span key={b.param} className="badge">
-              {b.emoji} {b.label} {b.pct}%
+          {profileBadges.map((b) => (
+            <span key={b.key} className="badge profile">
+              {b.text}
             </span>
           ))}
+          {situationBadges.map((b) => (
+            <span key={b.param} className="badge">
+              {b.emoji} {b.label}
+            </span>
+          ))}
+          {r.highlights?.keywords.slice(0, 2).map((k) => {
+            const info = findKeyword(k.key);
+            return info ? (
+              <span key={k.key} className="badge kw">
+                {info.emoji} {info.label}
+              </span>
+            ) : null;
+          })}
+          {!profileBadges.length && !situationBadges.length && r.reviewCount === 0 && (
+            <span className="r-muted">첫 리뷰를 기다리고 있어요</span>
+          )}
         </div>
       </div>
     </Link>

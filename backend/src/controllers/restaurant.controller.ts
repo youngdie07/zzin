@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import prisma from '../config/database';
-import { AuthRequest } from '../middleware/auth.middleware';
+import { AuthRequest, optionalUserId } from '../middleware/auth.middleware';
 import { parseImages, serializeImages } from '../utils/images';
+import { buildProfile, buildHighlights, serializeReview, valueScore, ProfileKey } from '../utils/profile';
 
 const KOREAN_FLAGS = ['goodForFamily', 'noDiscrimination', 'authenticKorean', 'koreanFriendly'] as const;
 
@@ -9,6 +10,8 @@ const summarize = (reviews: any[]) => {
   const avg = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
   return {
     avgRating: Math.round(avg * 10) / 10,
+    profile: buildProfile(reviews),
+    highlights: buildHighlights(reviews),
     koreanStats: {
       goodForFamilyCount: reviews.filter((r) => r.goodForFamily).length,
       noDiscriminationCount: reviews.filter((r) => r.noDiscrimination).length,
@@ -51,7 +54,12 @@ export const getRestaurants = async (req: Request, res: Response) => {
             goodForFamily: true,
             noDiscrimination: true,
             authenticKorean: true,
-            koreanFriendly: true
+            koreanFriendly: true,
+            authenticity: true,
+            priceValue: true,
+            crowd: true,
+            keywords: true,
+            menus: true
           }
         },
         _count: { select: { bookmarks: true } }
@@ -66,21 +74,29 @@ export const getRestaurants = async (req: Request, res: Response) => {
       bookmarkCount: _count.bookmarks
     }));
 
-    if (sort === 'reviews') all.sort((a, b) => b.reviewCount - a.reviewCount);
-    else if (sort === 'recent') all.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
-    else all.sort((a, b) => b.avgRating - a.avgRating || b.reviewCount - a.reviewCount);
+    const profileFilters = (['authenticity', 'priceValue', 'crowd'] as ProfileKey[]).filter((k) => req.query[k]);
+    const keyword = req.query.keyword as string | undefined;
+    const filtered = all
+      .filter((r) => profileFilters.every((k) => r.profile[k].top === req.query[k]))
+      .filter((r) => !keyword || r.highlights.keywords.some((h) => h.key === keyword));
+
+    if (sort === 'reviews') filtered.sort((a, b) => b.reviewCount - a.reviewCount);
+    else if (sort === 'recent') filtered.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+    else if (sort === 'saves') filtered.sort((a, b) => b.bookmarkCount - a.bookmarkCount || b.reviewCount - a.reviewCount);
+    else if (sort === 'value') filtered.sort((a, b) => valueScore(b.profile) - valueScore(a.profile) || b.reviewCount - a.reviewCount);
+    else filtered.sort((a, b) => b.avgRating - a.avgRating || b.reviewCount - a.reviewCount);
 
     const pageNum = parseInt(page as string);
     const limitNum = parseInt(limit as string);
-    const restaurants = all.slice((pageNum - 1) * limitNum, pageNum * limitNum);
+    const restaurants = filtered.slice((pageNum - 1) * limitNum, pageNum * limitNum);
 
     res.json({
       restaurants,
       pagination: {
         page: pageNum,
         limit: limitNum,
-        total: all.length,
-        totalPages: Math.ceil(all.length / limitNum)
+        total: filtered.length,
+        totalPages: Math.ceil(filtered.length / limitNum)
       }
     });
   } catch (error) {
@@ -111,10 +127,16 @@ export const getRestaurant = async (req: Request, res: Response) => {
 
     const { _count, ...rest } = restaurant;
 
+    const me = optionalUserId(req);
+    const helped = me
+      ? await prisma.reviewHelpful.findMany({ where: { userId: me, reviewId: { in: rest.reviews.map((r) => r.id) } } })
+      : [];
+    const helpedIds = new Set(helped.map((h) => h.reviewId));
+
     res.json({
       ...rest,
       images: parseImages(rest.images),
-      reviews: rest.reviews.map((r) => ({ ...r, images: parseImages(r.images) })),
+      reviews: rest.reviews.map((r) => ({ ...serializeReview(r), helpedByMe: helpedIds.has(r.id) })),
       ...summarize(rest.reviews),
       reviewCount: rest.reviews.length,
       bookmarkCount: _count.bookmarks
@@ -218,7 +240,12 @@ export const getUserBookmarks = async (req: AuthRequest, res: Response) => {
                 goodForFamily: true,
                 noDiscrimination: true,
                 authenticKorean: true,
-                koreanFriendly: true
+                koreanFriendly: true,
+                authenticity: true,
+                priceValue: true,
+                crowd: true,
+                keywords: true,
+                menus: true
               }
             }
           }

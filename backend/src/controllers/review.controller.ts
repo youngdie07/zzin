@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import prisma from '../config/database';
 import { AuthRequest } from '../middleware/auth.middleware';
-import { parseImages, serializeImages } from '../utils/images';
+import { serializeImages } from '../utils/images';
+import { sanitizeProfile, sanitizeExtras, serializeReview } from '../utils/profile';
 
 // 리뷰 생성
 export const createReview = async (req: AuthRequest, res: Response) => {
@@ -55,8 +56,10 @@ export const createReview = async (req: AuthRequest, res: Response) => {
         atmosphereRating: atmosphereRating ? parseFloat(atmosphereRating) : null,
         goodForFamily: goodForFamily || false,
         noDiscrimination: noDiscrimination !== false, // 기본값 true
-        authenticKorean: authenticKorean || false,
-        koreanFriendly: koreanFriendly || false
+        authenticKorean: authenticKorean || req.body.authenticity === 'korean',
+        koreanFriendly: koreanFriendly || false,
+        ...sanitizeProfile(req.body),
+        ...sanitizeExtras(req.body)
       },
       include: {
         user: {
@@ -78,7 +81,7 @@ export const createReview = async (req: AuthRequest, res: Response) => {
 
     res.status(201).json({
       message: '리뷰가 작성되었습니다.',
-      review
+      review: serializeReview(review)
     });
   } catch (error) {
     console.error('Create review error:', error);
@@ -111,6 +114,8 @@ export const updateReview = async (req: AuthRequest, res: Response) => {
       where: { id },
       data: {
         ...updateData,
+        ...sanitizeProfile(updateData),
+        ...sanitizeExtras(updateData),
         images: updateData.images !== undefined ? serializeImages(updateData.images) : review.images,
         rating: updateData.rating ? parseFloat(updateData.rating) : review.rating,
         tasteRating: updateData.tasteRating ? parseFloat(updateData.tasteRating) : review.tasteRating,
@@ -130,7 +135,7 @@ export const updateReview = async (req: AuthRequest, res: Response) => {
 
     res.json({
       message: '리뷰가 수정되었습니다.',
-      review: updatedReview
+      review: serializeReview(updatedReview)
     });
   } catch (error) {
     console.error('Update review error:', error);
@@ -191,7 +196,7 @@ export const getUserReviews = async (req: AuthRequest, res: Response) => {
       }
     });
 
-    res.json(reviews.map((r) => ({ ...r, images: parseImages(r.images) })));
+    res.json(reviews.map(serializeReview));
   } catch (error) {
     console.error('Get user reviews error:', error);
     res.status(500).json({ error: '리뷰 목록 조회 중 오류가 발생했습니다.' });
@@ -237,7 +242,7 @@ export const getRestaurantReviews = async (req: Request, res: Response) => {
     });
 
     res.json({
-      reviews: reviews.map((r) => ({ ...r, images: parseImages(r.images) })),
+      reviews: reviews.map(serializeReview),
       pagination: {
         page: parseInt(page as string),
         limit: parseInt(limit as string),
@@ -248,5 +253,30 @@ export const getRestaurantReviews = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Get restaurant reviews error:', error);
     res.status(500).json({ error: '리뷰 목록 조회 중 오류가 발생했습니다.' });
+  }
+};
+
+// 리뷰 "도움이 됐어요" 토글
+export const toggleHelpful = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.userId!;
+
+    const review = await prisma.review.findUnique({ where: { id } });
+    if (!review) return res.status(404).json({ error: '리뷰를 찾을 수 없습니다.' });
+    if (review.userId === userId) return res.status(400).json({ error: '내 리뷰에는 누를 수 없어요.' });
+
+    const key = { userId_reviewId: { userId, reviewId: id } };
+    const existing = await prisma.reviewHelpful.findUnique({ where: key });
+    if (existing) await prisma.reviewHelpful.delete({ where: key });
+    else await prisma.reviewHelpful.create({ data: { userId, reviewId: id } });
+
+    const count = await prisma.reviewHelpful.count({ where: { reviewId: id } });
+    await prisma.review.update({ where: { id }, data: { isHelpful: count } });
+
+    res.json({ helpful: !existing, count });
+  } catch (error) {
+    console.error('Toggle helpful error:', error);
+    res.status(500).json({ error: '처리 중 오류가 발생했습니다.' });
   }
 };

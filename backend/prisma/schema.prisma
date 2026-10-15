@@ -23,6 +23,7 @@ model User {
 
   reviews       Review[]
   bookmarks     Bookmark[]
+  helpfuls      ReviewHelpful[]
 
   @@map("users")
 }
@@ -74,6 +75,13 @@ model Review {
   authenticKorean Boolean     @default(false) // 정통 한식
   koreanFriendly  Boolean     @default(false) // 한국인 친화적
 
+  // 식당 성향 (집계해서 식당 프로필로 사용)
+  authenticity    String?     // korean | mixed | localized (한국 맛 그대로 / 반반 / 현지화)
+  priceValue      String?     // great | fair | poor (가성비)
+  crowd           String?     // korean | mixed | local (주 손님층)
+  keywords        String?     // JSON 배열: 한국어 주문 가능, 주차 편함 등 키워드
+  menus           String?     // JSON 배열: 추천 메뉴
+
   likes           Int         @default(0)
   isHelpful       Int         @default(0) // 도움됨 카운트
 
@@ -82,6 +90,7 @@ model Review {
 
   user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   restaurant      Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  helpfuls        ReviewHelpful[]
 
   @@map("reviews")
 }
@@ -126,4 +135,17 @@ model Bookmark {
 
   @@unique([userId, restaurantId])
   @@map("bookmarks")
+}
+
+// 리뷰 "도움이 됐어요"
+model ReviewHelpful {
+  userId    String
+  reviewId  String
+  createdAt DateTime @default(now())
+
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  review    Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@id([userId, reviewId])
+  @@map("review_helpfuls")
 }

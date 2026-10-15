@@ -27,8 +27,23 @@ export interface Restaurant {
   reviewCount: number;
   bookmarkCount: number;
   koreanStats: KoreanStats;
+  profile: RestaurantProfile;
+  highlights: { keywords: { key: string; count: number }[]; menus: { name: string; count: number }[] };
   tags?: RestaurantTag[];
   reviews?: Review[];
+}
+
+// 식당 성향 집계
+export interface ProfileDist {
+  counts: Record<string, number>;
+  total: number;
+  top: string | null;
+}
+
+export interface RestaurantProfile {
+  authenticity: ProfileDist;
+  priceValue: ProfileDist;
+  crowd: ProfileDist;
 }
 
 // 한국인 맞춤 통계
@@ -55,6 +70,12 @@ export interface Review {
   noDiscrimination: boolean;
   authenticKorean: boolean;
   koreanFriendly: boolean;
+  authenticity?: string | null;
+  priceValue?: string | null;
+  crowd?: string | null;
+  keywords?: string[];
+  menus?: string[];
+  helpedByMe?: boolean;
   likes: number;
   isHelpful: number;
   createdAt: string;

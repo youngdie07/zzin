@@ -226,6 +226,16 @@ async function main() {
           noDiscrimination: flags.includes('d'),
           authenticKorean: flags.includes('a'),
           koreanFriendly: flags.includes('k'),
+          authenticity: ['한식', '퓨전'].includes(r.cuisine) ? (flags.includes('a') ? 'korean' : flags.includes('k') ? 'mixed' : 'localized') : null,
+          priceValue: rating >= 5 ? 'great' : rating >= 4 ? 'fair' : 'poor',
+          keywords: JSON.stringify([
+            ...(flags.includes('f') ? ['kids', 'group'] : []),
+            ...(flags.includes('d') ? ['kind'] : []),
+            ...(flags.includes('a') ? ['korean_staff', 'banchan'] : []),
+            ...(flags.includes('k') ? ['big_portion'] : []),
+            ...(u % 3 === 0 ? ['parking'] : [])
+          ]),
+          crowd: r.cuisine === '한식' ? (u % 4 === 3 ? 'mixed' : 'korean') : ['양식', '멕시칸', '브런치'].includes(r.cuisine) ? 'local' : 'mixed',
           likes: (u * 3 + rating) % 9
         }
       });

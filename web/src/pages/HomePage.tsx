@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Restaurant } from '../types';
 import { restaurantService } from '../services/restaurant.service';
 import RestaurantCard from '../components/RestaurantCard';
-import { CUISINES, KOREAN_TAGS, getCuisineStyle } from '../utils/cuisine';
+import { CUISINES, KOREAN_TAGS, PROFILE, ProfileKey, QUICK_KEYWORDS, findKeyword, getCuisineStyle } from '../utils/cuisine';
 
 function HomePage() {
   const navigate = useNavigate();
@@ -12,12 +12,16 @@ function HomePage() {
   const [cuisine, setCuisine] = useState('전체');
   const [activeTags, setActiveTags] = useState<string[]>([]);
   const [sort, setSort] = useState('rating');
+  const [profileFilter, setProfileFilter] = useState<Partial<Record<ProfileKey, string>>>({});
   const [query, setQuery] = useState('');
+  const [keyword, setKeyword] = useState('');
 
   useEffect(() => {
     const params: Record<string, unknown> = { sort, limit: 50 };
     if (cuisine !== '전체') params.cuisineType = cuisine;
     activeTags.forEach((t) => (params[t] = true));
+    if (keyword) params.keyword = keyword;
+    Object.entries(profileFilter).forEach(([k, v]) => v && (params[k] = v));
 
     setLoading(true);
     restaurantService
@@ -25,10 +29,19 @@ function HomePage() {
       .then((res) => setRestaurants(res.restaurants))
       .catch((e) => console.error(e))
       .finally(() => setLoading(false));
-  }, [cuisine, activeTags, sort]);
+  }, [cuisine, activeTags, sort, profileFilter, keyword]);
 
   const toggleTag = (param: string) =>
     setActiveTags((prev) => (prev.includes(param) ? prev.filter((t) => t !== param) : [...prev, param]));
+
+  const toggleProfile = (key: ProfileKey, value: string) =>
+    setProfileFilter((prev) => ({ ...prev, [key]: prev[key] === value ? undefined : value }));
+
+  const pickRandom = () => {
+    if (!restaurants.length) return;
+    const r = restaurants[Math.floor(Math.random() * restaurants.length)];
+    navigate(`/restaurant/${r.id}`);
+  };
 
   const onSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +73,7 @@ function HomePage() {
       <div className="container">
         <h3 className="section-title">어떤 상황이세요?</h3>
         <div className="situation-grid">
-          {KOREAN_TAGS.map((t) => (
+          {KOREAN_TAGS.filter((t) => t.param !== 'authenticKorean').map((t) => (
             <button
               key={t.param}
               className={`situation ${activeTags.includes(t.param) ? 'on' : ''}`}
@@ -71,6 +84,44 @@ function HomePage() {
               <small>{t.desc}</small>
             </button>
           ))}
+        </div>
+
+        <div className="filter-groups">
+          {(Object.keys(PROFILE) as ProfileKey[]).map((k) => (
+            <div key={k} className="filter-group">
+              <span className="filter-group-title">{PROFILE[k].title}</span>
+              {PROFILE[k].options
+                .filter((o) => !(k === 'priceValue' && o.value === 'fair') && !(o.value === 'mixed'))
+                .map((o) => (
+                  <button
+                    key={o.value}
+                    className={`chip sm ${profileFilter[k] === o.value ? 'on' : ''}`}
+                    onClick={() => toggleProfile(k, o.value)}
+                    title={o.desc}
+                  >
+                    {o.emoji} {o.short}
+                  </button>
+                ))}
+            </div>
+          ))}
+        </div>
+
+        <div className="filter-groups" style={{ marginTop: 8 }}>
+          <div className="filter-group">
+            <span className="filter-group-title">편의</span>
+            {QUICK_KEYWORDS.map((k) => {
+              const info = findKeyword(k)!;
+              return (
+                <button
+                  key={k}
+                  className={`chip sm ${keyword === k ? 'on' : ''}`}
+                  onClick={() => setKeyword(keyword === k ? '' : k)}
+                >
+                  {info.emoji} {info.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <div className="chip-row">
@@ -85,8 +136,13 @@ function HomePage() {
           <h3 className="section-title" style={{ margin: 0 }}>
             {loading ? '불러오는 중...' : `${restaurants.length}곳`}
           </h3>
+          <button className="pick-btn" onClick={pickRandom} disabled={!restaurants.length}>
+            🎲 오늘 뭐 먹지?
+          </button>
           <select value={sort} onChange={(e) => setSort(e.target.value)} className="select">
             <option value="rating">한인 평점순</option>
+            <option value="value">가성비순</option>
+            <option value="saves">저장 많은순</option>
             <option value="reviews">리뷰 많은순</option>
             <option value="recent">최신 등록순</option>
           </select>

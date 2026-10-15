@@ -15,8 +15,19 @@ export const reviewService = {
     noDiscrimination?: boolean;
     authenticKorean?: boolean;
     koreanFriendly?: boolean;
+    authenticity?: string;
+    priceValue?: string;
+    crowd?: string;
+    keywords?: string[];
+    menus?: string[];
   }): Promise<{ message: string; review: Review }> {
     const response = await api.post('/reviews', data);
+    return response.data;
+  },
+
+  // 도움이 됐어요 토글
+  async toggleHelpful(reviewId: string): Promise<{ helpful: boolean; count: number }> {
+    const response = await api.post(`/reviews/${reviewId}/helpful`);
     return response.data;
   },
 

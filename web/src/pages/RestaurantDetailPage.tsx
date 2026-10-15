@@ -3,7 +3,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Restaurant } from '../types';
 import { restaurantService } from '../services/restaurant.service';
 import { authService } from '../services/auth.service';
-import { getCuisineStyle, KOREAN_TAGS } from '../utils/cuisine';
+import { reviewService } from '../services/review.service';
+import { findKeyword, findOption, getCuisineStyle, KOREAN_TAGS, PROFILE, PROFILE_KEYS } from '../utils/cuisine';
 
 const stars = (n: number) => '★'.repeat(Math.round(n)) + '☆'.repeat(5 - Math.round(n));
 
@@ -13,13 +14,18 @@ function RestaurantDetailPage() {
   const [r, setR] = useState<Restaurant | null>(null);
   const [loading, setLoading] = useState(true);
   const [bookmarked, setBookmarked] = useState(false);
+  const [saves, setSaves] = useState(0);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!id) return;
     setLoading(true);
     restaurantService
       .getRestaurant(id)
-      .then(setR)
+      .then((d) => {
+        setR(d);
+        setSaves(d.bookmarkCount);
+      })
       .catch((e) => console.error(e))
       .finally(() => setLoading(false));
     if (authService.isAuthenticated()) {
@@ -34,6 +40,32 @@ function RestaurantDetailPage() {
     if (!authService.isAuthenticated()) return navigate('/login');
     const res = await restaurantService.toggleBookmark(id!);
     setBookmarked(res.bookmarked);
+    setSaves((n) => n + (res.bookmarked ? 1 : -1));
+  };
+
+  const onShare = async () => {
+    await navigator.clipboard?.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
+  const onHelpful = async (reviewId: string) => {
+    if (!authService.isAuthenticated()) return navigate('/login');
+    try {
+      const res = await reviewService.toggleHelpful(reviewId);
+      setR((prev) =>
+        prev
+          ? {
+              ...prev,
+              reviews: prev.reviews?.map((x) =>
+                x.id === reviewId ? { ...x, helpedByMe: res.helpful, isHelpful: res.count } : x
+              ),
+            }
+          : prev
+      );
+    } catch (e: any) {
+      alert(e.response?.data?.error || '처리하지 못했어요.');
+    }
   };
 
   if (loading)
@@ -66,7 +98,26 @@ function RestaurantDetailPage() {
             </p>
           </div>
           <button className={`btn-bookmark ${bookmarked ? 'on' : ''}`} onClick={onBookmark}>
-            {bookmarked ? '★ 저장됨' : '☆ 저장'}
+            {bookmarked ? '★ 저장됨' : '☆ 저장'} {saves}
+          </button>
+        </div>
+
+        <div className="action-row">
+          {r.phoneNumber && (
+            <a href={`tel:${r.phoneNumber}`} className="action-btn">
+              📞 전화
+            </a>
+          )}
+          <a
+            href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(r.name + ' ' + r.address)}`}
+            target="_blank"
+            rel="noreferrer"
+            className="action-btn"
+          >
+            🧭 길찾기
+          </a>
+          <button className="action-btn" onClick={onShare}>
+            {copied ? '✅ 복사됨' : '🔗 공유'}
           </button>
         </div>
 
@@ -77,7 +128,7 @@ function RestaurantDetailPage() {
             <small>한인 리뷰 {r.reviewCount}개</small>
           </div>
           <div className="score-bars">
-            {KOREAN_TAGS.map((t) => {
+            {KOREAN_TAGS.filter((t) => t.param !== 'authenticKorean').map((t) => {
               const pct = total ? Math.round(((r.koreanStats as any)[t.statKey] / total) * 100) : 0;
               return (
                 <div key={t.param} className="bar-row">
@@ -93,6 +144,74 @@ function RestaurantDetailPage() {
             })}
           </div>
         </div>
+
+        <div className="profile-box">
+          <h3 className="section-title" style={{ marginTop: 0 }}>
+            이 식당은 어떤 곳?
+          </h3>
+          {PROFILE_KEYS.map((k) => {
+            const d = r.profile[k];
+            if (k === 'authenticity' && !['한식', '퓨전'].includes(r.cuisineType)) return null;
+            return (
+              <div key={k} className="profile-row">
+                <div className="profile-title">{PROFILE[k].title}</div>
+                {d.total ? (
+                  <>
+                    <div className="seg-bar">
+                      {PROFILE[k].options.map((o, i) =>
+                        d.counts[o.value] ? (
+                          <div key={o.value} className={`seg seg-${i}`} style={{ flex: d.counts[o.value] }} />
+                        ) : null
+                      )}
+                    </div>
+                    <div className="seg-legend">
+                      {PROFILE[k].options.map((o, i) => (
+                        <span key={o.value} className={d.top === o.value ? 'top' : ''}>
+                          <i className={`dot seg-${i}`} />
+                          {o.emoji} {o.short} {Math.round((d.counts[o.value] / d.total) * 100)}%
+                        </span>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div className="r-muted">아직 답변이 없어요</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {(r.highlights.keywords.length > 0 || r.highlights.menus.length > 0) && (
+          <div className="profile-box">
+            {r.highlights.menus.length > 0 && (
+              <div className="profile-row">
+                <div className="profile-title">🍽️ 이거 시켜 드세요 (한인 추천 메뉴)</div>
+                <div className="r-card-badges">
+                  {r.highlights.menus.map((m) => (
+                    <span key={m.name} className="badge menu">
+                      {m.name} {m.count > 1 && <b>{m.count}</b>}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {r.highlights.keywords.length > 0 && (
+              <div className="profile-row">
+                <div className="profile-title">이런 점이 자주 언급돼요</div>
+                <div className="r-card-badges">
+                  {r.highlights.keywords.map((k) => {
+                    const info = findKeyword(k.key);
+                    return info ? (
+                      <span key={k.key} className="badge kw">
+                        {info.emoji} {info.label} <b>{k.count}</b>
+                      </span>
+                    ) : null;
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {r.description && <p className="detail-desc">{r.description}</p>}
 
@@ -131,13 +250,33 @@ function RestaurantDetailPage() {
               </span>
             </div>
             <p>{rv.content}</p>
+            {!!rv.menus?.length && <div className="r-muted small" style={{ marginBottom: 8 }}>🍽️ 추천: {rv.menus.join(', ')}</div>}
             <div className="r-card-badges">
-              {KOREAN_TAGS.filter((t) => (rv as any)[t.param]).map((t) => (
+              {PROFILE_KEYS.map((k) => {
+                const o = findOption(k, (rv as any)[k]);
+                return o ? (
+                  <span key={k} className="badge profile">
+                    {o.emoji} {o.short}
+                  </span>
+                ) : null;
+              })}
+              {rv.keywords?.map((key) => {
+                const info = findKeyword(key);
+                return info ? (
+                  <span key={key} className="badge kw">
+                    {info.emoji} {info.label}
+                  </span>
+                ) : null;
+              })}
+              {KOREAN_TAGS.filter((t) => t.param !== 'authenticKorean' && (rv as any)[t.param]).map((t) => (
                 <span key={t.param} className="badge">
                   {t.emoji} {t.label}
                 </span>
               ))}
             </div>
+            <button className={`helpful ${rv.helpedByMe ? 'on' : ''}`} onClick={() => onHelpful(rv.id)}>
+              👍 도움이 됐어요 {rv.isHelpful > 0 && rv.isHelpful}
+            </button>
             {rv.tasteRating && (
               <div className="subratings">
                 맛 {rv.tasteRating} · 서비스 {rv.serviceRating} · 분위기 {rv.atmosphereRating}
