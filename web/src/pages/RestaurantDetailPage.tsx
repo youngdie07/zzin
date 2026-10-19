@@ -102,6 +102,12 @@ function RestaurantDetailPage() {
           </button>
         </div>
 
+        {r.editor?.note && (
+          <div className="editor-note">
+            ✍️ <b>에디터 한줄평</b> {r.editor.note}
+          </div>
+        )}
+
         {r.businessStatus === 'closed' && (
           <div className="notice warn">이 식당은 폐업한 것으로 확인돼요. 기록 보관용으로만 남겨두었어요.</div>
         )}
@@ -166,6 +172,7 @@ function RestaurantDetailPage() {
                   ) : (
                     <strong>❔ 아직 확인되지 않았어요</strong>
                   )}
+                  {t.source === 'editor' && <span className="badge tip">찐 에디터 확인</span>}
                   {t.source === 'users' && <span className="badge">한인 리뷰 {t.userReports.total}명 기준</span>}
                   {t.source === 'ai' && <span className="badge profile">AI 웹 조사 · 신뢰도 {Math.round((t.confidence ?? 0) * 100)}%</span>}
                 </div>
@@ -191,11 +198,15 @@ function RestaurantDetailPage() {
                     ))}
                   </ul>
                 )}
+                {t.source !== 'editor' && (
+
                 <div className="r-muted small" style={{ marginTop: 8 }}>
                   AI가 웹 검색으로 조사한 정보라 틀릴 수 있어요
                   {t.ai.checkedAt ? ` (조사일 ${new Date(t.ai.checkedAt).toLocaleDateString('ko-KR')})` : ''}. 다녀오셨다면 리뷰에서
                   알려주세요.
                 </div>
+
+                )}
               </>
             );
           })()}
@@ -211,6 +222,11 @@ function RestaurantDetailPage() {
             return (
               <div key={k} className="profile-row">
                 <div className="profile-title">{PROFILE[k].title}</div>
+                {d.editor && findOption(k, d.top) && (
+                  <div className="editor-pick">
+                    ✍️ 찐 에디터 선정 · {findOption(k, d.top)!.emoji} {findOption(k, d.top)!.label}
+                  </div>
+                )}
                 {d.total ? (
                   <>
                     <div className="seg-bar">
@@ -229,7 +245,7 @@ function RestaurantDetailPage() {
                       ))}
                     </div>
                   </>
-                ) : (
+                ) : d.editor ? null : (
                   <div className="r-muted">아직 답변이 없어요</div>
                 )}
               </div>
@@ -259,7 +275,7 @@ function RestaurantDetailPage() {
                     const info = findKeyword(k.key);
                     return info ? (
                       <span key={k.key} className="badge kw">
-                        {info.emoji} {info.label} <b>{k.count}</b>
+                        {info.emoji} {info.label} {k.count > 0 && <b>{k.count}</b>}
                       </span>
                     ) : null;
                   })}

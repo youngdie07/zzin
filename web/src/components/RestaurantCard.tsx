@@ -8,14 +8,15 @@ function RestaurantCard({ restaurant: r }: { restaurant: Restaurant }) {
 
   const profileBadges = PROFILE_KEYS.map((k) => {
     const d = r.profile?.[k];
-    if (!d?.top || d.total < 1 || d.counts[d.top] / d.total < 0.5) return null;
+    if (!d?.top) return null;
+    if (!d.editor && (d.total < 1 || d.counts[d.top] / d.total < 0.5)) return null;
     const o = findOption(k, d.top);
-    return o ? { key: k, text: `${o.emoji} ${o.short}`, pct: Math.round((d.counts[d.top] / d.total) * 100) } : null;
+    return o ? { key: k, text: `${o.emoji} ${o.short}`, pct: d.total ? Math.round((d.counts[d.top] / d.total) * 100) : 100 } : null;
   }).filter(Boolean) as { key: string; text: string; pct: number }[];
 
   const situationBadges = KOREAN_TAGS.filter((t) => t.param !== 'authenticKorean')
     .map((t) => ({ ...t, pct: total ? Math.round(((r.koreanStats as any)[t.statKey] / total) * 100) : 0 }))
-    .filter((t) => t.pct >= 60)
+    .filter((t) => t.pct >= 60 || !!r.editor?.situations.includes(t.param))
     .slice(0, Math.max(0, 4 - profileBadges.length));
 
   return (

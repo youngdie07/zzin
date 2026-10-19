@@ -3,6 +3,7 @@ import prisma from '../config/database';
 import { AuthRequest, optionalUserId } from '../middleware/auth.middleware';
 import { parseImages, serializeImages } from '../utils/images';
 import { withTip } from '../utils/tip';
+import { applyEditor } from '../utils/editor';
 import { buildProfile, buildHighlights, serializeReview, valueScore, ProfileKey } from '../utils/profile';
 
 const KOREAN_FLAGS = ['goodForFamily', 'noDiscrimination', 'authenticKorean', 'koreanFriendly'] as const;
@@ -43,9 +44,6 @@ export const getRestaurants = async (req: Request, res: Response) => {
     if (priceRange) where.priceRange = parseInt(priceRange as string);
 
     const flagFilters = KOREAN_FLAGS.filter((k) => req.query[k] === 'true');
-    if (flagFilters.length) {
-      where.AND = flagFilters.map((k) => ({ reviews: { some: { [k]: true } } }));
-    }
 
     const rows = await prisma.restaurant.findMany({
       where,
@@ -69,23 +67,26 @@ export const getRestaurants = async (req: Request, res: Response) => {
       }
     });
 
-    const all = rows.map(({ reviews, _count, ...restaurant }) => ({
-      ...withTip(restaurant, reviews),
-      images: parseImages(restaurant.images),
-      ...summarize(reviews),
-      reviewCount: reviews.length,
-      bookmarkCount: _count.bookmarks
-    }));
+    const all = rows.map(({ reviews, _count, ...restaurant }) =>
+      applyEditor({
+        ...withTip(restaurant, reviews),
+        images: parseImages(restaurant.images),
+        ...summarize(reviews),
+        reviewCount: reviews.length,
+        bookmarkCount: _count.bookmarks
+      })
+    ) as any[];
 
     const profileFilters = (['authenticity', 'priceValue', 'crowd'] as ProfileKey[]).filter((k) => req.query[k]);
     const keyword = req.query.keyword as string | undefined;
     const filtered = all
+      .filter((r) => flagFilters.every((k) => r.situations[k]))
       .filter((r) => profileFilters.every((k) => r.profile[k].top === req.query[k]))
       .filter((r) => {
         const t = req.query.tip as string | undefined;
         return !t || (t === 'none' ? r.tip.noTipNeeded : r.tip.policy === t);
       })
-      .filter((r) => !keyword || r.highlights.keywords.some((h) => h.key === keyword));
+      .filter((r) => !keyword || r.highlights.keywords.some((h: any) => h.key === keyword));
 
     if (sort === 'reviews') filtered.sort((a, b) => b.reviewCount - a.reviewCount);
     else if (sort === 'recent') filtered.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
@@ -140,14 +141,16 @@ export const getRestaurant = async (req: Request, res: Response) => {
       : [];
     const helpedIds = new Set(helped.map((h) => h.reviewId));
 
-    res.json({
-      ...withTip(rest, rest.reviews),
-      images: parseImages(rest.images),
-      reviews: rest.reviews.map((r) => ({ ...serializeReview(r), helpedByMe: helpedIds.has(r.id) })),
-      ...summarize(rest.reviews),
-      reviewCount: rest.reviews.length,
-      bookmarkCount: _count.bookmarks
-    });
+    res.json(
+      applyEditor({
+        ...withTip(rest, rest.reviews),
+        images: parseImages(rest.images),
+        reviews: rest.reviews.map((r) => ({ ...serializeReview(r), helpedByMe: helpedIds.has(r.id) })),
+        ...summarize(rest.reviews),
+        reviewCount: rest.reviews.length,
+        bookmarkCount: _count.bookmarks
+      })
+    );
   } catch (error) {
     console.error('Get restaurant error:', error);
     res.status(500).json({ error: '음식점 조회 중 오류가 발생했습니다.' });
@@ -265,12 +268,12 @@ export const getUserBookmarks = async (req: AuthRequest, res: Response) => {
     res.json(
       bookmarks.map(({ restaurant: { reviews, ...restaurant }, ...bookmark }) => ({
         ...bookmark,
-        restaurant: {
+        restaurant: applyEditor({
           ...withTip(restaurant, reviews),
           images: parseImages(restaurant.images),
           ...summarize(reviews),
           reviewCount: reviews.length
-        }
+        })
       }))
     );
   } catch (error) {

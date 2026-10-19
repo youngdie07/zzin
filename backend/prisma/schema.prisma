@@ -52,6 +52,17 @@ model Restaurant {
   tipEvidence     String?   // JSON 배열: [{ source, url, summary }]
   tipCheckedAt    DateTime?
   businessStatus  String    @default("unverified") // unverified | open | closed
+
+  // 에디터(운영자)가 직접 정한 분류 - 시트에서 동기화. 값이 있으면 리뷰 집계보다 우선
+  editorAuthenticity String?  // korean | mixed | localized
+  editorPriceValue   String?  // great | fair | poor
+  editorCrowd        String?  // korean | mixed | local
+  editorTip          String?  // no_tip | included | optional | standard
+  editorSituations   String?  // JSON 배열: goodForFamily | noDiscrimination | koreanFriendly
+  editorKeywords     String?  // JSON 배열
+  editorMenus        String?  // JSON 배열
+  editorNote         String?  // 에디터 한줄평
+  editorUpdatedAt    DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 

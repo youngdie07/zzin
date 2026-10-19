@@ -29,8 +29,20 @@ export interface Restaurant {
   koreanStats: KoreanStats;
   profile: RestaurantProfile;
   tip: TipInfo;
+  situations: { goodForFamily: boolean; noDiscrimination: boolean; authenticKorean: boolean; koreanFriendly: boolean };
+  editor: {
+    authenticity: string | null;
+    priceValue: string | null;
+    crowd: string | null;
+    tip: string | null;
+    situations: string[];
+    keywords: string[];
+    menus: string[];
+    note: string | null;
+    updatedAt: string | null;
+  } | null;
   businessStatus?: string;
-  highlights: { keywords: { key: string; count: number }[]; menus: { name: string; count: number }[] };
+  highlights: { keywords: { key: string; count: number; editor?: boolean }[]; menus: { name: string; count: number; editor?: boolean }[] };
   tags?: RestaurantTag[];
   reviews?: Review[];
 }
@@ -40,11 +52,12 @@ export interface ProfileDist {
   counts: Record<string, number>;
   total: number;
   top: string | null;
+  editor?: boolean;
 }
 
 export interface TipInfo {
   policy: 'no_tip' | 'included' | 'optional' | 'standard' | 'unknown';
-  source: 'users' | 'ai' | null;
+  source: 'editor' | 'users' | 'ai' | null;
   confidence: number | null;
   noTipNeeded: boolean;
   userReports: { counts: Record<string, number>; total: number };

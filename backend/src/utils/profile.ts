@@ -39,6 +39,8 @@ export const buildProfile = (reviews: any[]) => ({
 
 // 가성비 점수 0~1 (정렬용)
 export const valueScore = (profile: ReturnType<typeof buildProfile>) => {
+  const pv: any = profile.priceValue;
+  if (pv.editor) return pv.top === 'great' ? 1 : pv.top === 'fair' ? 0.5 : 0;
   const { counts, total } = profile.priceValue;
   return total ? (counts.great + counts.fair * 0.5) / total : 0;
 };

@@ -1,3 +1,5 @@
+import { buildEditor, stripEditorFields } from './editor';
+
 export const TIP_POLICIES = ['no_tip', 'included', 'optional', 'standard'] as const;
 export type TipPolicy = (typeof TIP_POLICIES)[number];
 
@@ -33,10 +35,14 @@ export const buildTip = (restaurant: any, reviews: any[]) => {
   const aiConfidence = restaurant.tipConfidence ?? null;
 
   let policy: TipPolicy | 'unknown' = 'unknown';
-  let source: 'users' | 'ai' | null = null;
+  let source: 'editor' | 'users' | 'ai' | null = null;
   let confidence: number | null = null;
 
-  if (top && total >= MIN_USER_REPORTS && counts[top] / total >= MIN_USER_SHARE) {
+  if (isTipPolicy(restaurant.editorTip)) {
+    policy = restaurant.editorTip;
+    source = 'editor';
+    confidence = 1;
+  } else if (top && total >= MIN_USER_REPORTS && counts[top] / total >= MIN_USER_SHARE) {
     policy = top;
     source = 'users';
     confidence = counts[top] / total;
@@ -58,5 +64,5 @@ export const buildTip = (restaurant: any, reviews: any[]) => {
 
 export const withTip = <T extends Record<string, any>>(restaurant: T, reviews: any[]) => {
   const { tipPolicy, tipConfidence, tipEvidence, tipCheckedAt, ...rest } = restaurant;
-  return { ...rest, tip: buildTip(restaurant, reviews) };
+  return { ...stripEditorFields(rest), editor: buildEditor(restaurant), tip: buildTip(restaurant, reviews) };
 };

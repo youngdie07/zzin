@@ -13,7 +13,9 @@
     "seed": "ts-node --transpile-only prisma/seed.ts",
     "seed:demo": "SEED_DEMO=1 ts-node --transpile-only prisma/seed.ts",
     "research:apply": "ts-node --transpile-only prisma/apply-research.ts",
-    "tips:update": "ts-node --transpile-only scripts/update-tip-policy.ts"
+    "tips:update": "ts-node --transpile-only scripts/update-tip-policy.ts",
+    "sheet:sync": "ts-node --transpile-only scripts/sync-sheet.ts",
+    "sheet:template": "ts-node --transpile-only scripts/make-template.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.135.0",

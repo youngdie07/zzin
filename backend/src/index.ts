@@ -7,6 +7,8 @@ import restaurantRoutes from './routes/restaurant.routes';
 import reviewRoutes from './routes/review.routes';
 import userRoutes from './routes/user.routes';
 import authRoutes from './routes/auth.routes';
+import prisma from './config/database';
+import { startSheetSync } from './services/sheet-sync';
 
 dotenv.config();
 
@@ -47,6 +49,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 app.listen(PORT, () => {
   console.log(`🚀 ZZIN Server running on port ${PORT}`);
   console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  startSheetSync(prisma);
 });
 
 export default app;
