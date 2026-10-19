@@ -4,7 +4,7 @@ import { Restaurant } from '../types';
 import { restaurantService } from '../services/restaurant.service';
 import { authService } from '../services/auth.service';
 import { reviewService } from '../services/review.service';
-import { findKeyword, findOption, getCuisineStyle, KOREAN_TAGS, PROFILE, PROFILE_KEYS } from '../utils/cuisine';
+import { findKeyword, findOption, findTip, getCuisineStyle, KOREAN_TAGS, PROFILE, PROFILE_KEYS } from '../utils/cuisine';
 
 const stars = (n: number) => '★'.repeat(Math.round(n)) + '☆'.repeat(5 - Math.round(n));
 
@@ -102,6 +102,10 @@ function RestaurantDetailPage() {
           </button>
         </div>
 
+        {r.businessStatus === 'closed' && (
+          <div className="notice warn">이 식당은 폐업한 것으로 확인돼요. 기록 보관용으로만 남겨두었어요.</div>
+        )}
+
         <div className="action-row">
           {r.phoneNumber && (
             <a href={`tel:${r.phoneNumber}`} className="action-btn">
@@ -143,6 +147,58 @@ function RestaurantDetailPage() {
               );
             })}
           </div>
+        </div>
+
+        <div className="profile-box">
+          <h3 className="section-title" style={{ marginTop: 0 }}>
+            💵 팁 정보
+          </h3>
+          {(() => {
+            const t = r.tip;
+            const opt = findTip(t.policy);
+            return (
+              <>
+                <div className="tip-head">
+                  {opt ? (
+                    <strong className={t.noTipNeeded ? 'tip-good' : ''}>
+                      {opt.emoji} {opt.label}
+                    </strong>
+                  ) : (
+                    <strong>❔ 아직 확인되지 않았어요</strong>
+                  )}
+                  {t.source === 'users' && <span className="badge">한인 리뷰 {t.userReports.total}명 기준</span>}
+                  {t.source === 'ai' && <span className="badge profile">AI 웹 조사 · 신뢰도 {Math.round((t.confidence ?? 0) * 100)}%</span>}
+                </div>
+                {t.userReports.total > 0 && t.source !== 'users' && (
+                  <div className="r-muted small" style={{ marginTop: 6 }}>
+                    한인 제보 {t.userReports.total}건 (3명 이상 같은 답이 모이면 반영돼요)
+                  </div>
+                )}
+                {t.ai.evidence.length > 0 && (
+                  <ul className="evidence">
+                    {t.ai.evidence.map((e, i) => (
+                      <li key={i}>
+                        {e.url ? (
+                          <a href={e.url} target="_blank" rel="noreferrer">
+                            {e.source}
+                          </a>
+                        ) : (
+                          <span>{e.source}</span>
+                        )}
+                        {' - '}
+                        {e.summary}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <div className="r-muted small" style={{ marginTop: 8 }}>
+                  AI가 웹 검색으로 조사한 정보라 틀릴 수 있어요
+                  {t.ai.checkedAt ? ` (조사일 ${new Date(t.ai.checkedAt).toLocaleDateString('ko-KR')})` : ''}. 다녀오셨다면 리뷰에서
+                  알려주세요.
+                </div>
+              </>
+            );
+          })()}
         </div>
 
         <div className="profile-box">
@@ -260,6 +316,11 @@ function RestaurantDetailPage() {
                   </span>
                 ) : null;
               })}
+              {findTip(rv.tipReport) && (
+                <span className="badge tip">
+                  {findTip(rv.tipReport)!.emoji} {findTip(rv.tipReport)!.short}
+                </span>
+              )}
               {rv.keywords?.map((key) => {
                 const info = findKeyword(key);
                 return info ? (

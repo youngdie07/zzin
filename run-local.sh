@@ -16,6 +16,7 @@ npm install --no-workspaces --no-audit --no-fund
 npx prisma generate
 npx prisma migrate deploy
 if [ "$FIRST_RUN" = 1 ]; then npm run seed; fi
+npm run research:apply
 
 trap 'trap - EXIT; kill 0' EXIT INT TERM
 npm run dev &

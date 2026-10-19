@@ -79,10 +79,18 @@ export const KEYWORDS = [
   { key: 'kind', emoji: '😊', label: '직원 친절' },
   { key: 'late', emoji: '🌙', label: '늦게까지 영업' },
   { key: 'takeout', emoji: '🥡', label: '포장 편함' },
-  { key: 'low_tip', emoji: '💵', label: '팁 부담 적음' },
 ] as const;
 
 export const findKeyword = (key: string) => KEYWORDS.find((k) => k.key === key);
 
 // 홈 화면 빠른 필터에 노출할 키워드
 export const QUICK_KEYWORDS = ['korean_staff', 'parking', 'solo', 'drinks', 'kids', 'takeout'];
+
+export const TIP_OPTIONS = [
+  { value: 'no_tip', emoji: '💵', label: '팁 안 받아요', short: '팁 없음', desc: '노팁 정책, 팁을 받지 않음' },
+  { value: 'included', emoji: '🧾', label: '팁 포함', short: '팁 포함', desc: '서비스 차지가 이미 포함됨' },
+  { value: 'optional', emoji: '🙂', label: '팁 선택', short: '팁 선택', desc: '안 줘도 괜찮음 (카운터 주문 등)' },
+  { value: 'standard', emoji: '💸', label: '팁 필수', short: '팁 필수(15~20%)', desc: '일반 식당처럼 팁을 줘야 함' },
+] as const;
+
+export const findTip = (v?: string | null) => TIP_OPTIONS.find((t) => t.value === v);

@@ -2,6 +2,7 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { realRestaurants } from './data/austin-korean-restaurants';
+import { applyResearch } from './apply-research';
 
 const prisma = new PrismaClient();
 
@@ -241,6 +242,8 @@ async function main() {
       });
     }
   }
+
+  await applyResearch(prisma);
 
   console.log(`시드 완료: 사용자 ${users.length}명, 음식점 ${restaurants.length}곳`);
   console.log('데모 계정: demo@zzin.app / demo1234');

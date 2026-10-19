@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import prisma from '../config/database';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { serializeImages } from '../utils/images';
+import { sanitizeTipReport } from '../utils/tip';
 import { sanitizeProfile, sanitizeExtras, serializeReview } from '../utils/profile';
 
 // 리뷰 생성
@@ -59,7 +60,8 @@ export const createReview = async (req: AuthRequest, res: Response) => {
         authenticKorean: authenticKorean || req.body.authenticity === 'korean',
         koreanFriendly: koreanFriendly || false,
         ...sanitizeProfile(req.body),
-        ...sanitizeExtras(req.body)
+        ...sanitizeExtras(req.body),
+        ...sanitizeTipReport(req.body)
       },
       include: {
         user: {
@@ -116,6 +118,7 @@ export const updateReview = async (req: AuthRequest, res: Response) => {
         ...updateData,
         ...sanitizeProfile(updateData),
         ...sanitizeExtras(updateData),
+        ...sanitizeTipReport(updateData),
         images: updateData.images !== undefined ? serializeImages(updateData.images) : review.images,
         rating: updateData.rating ? parseFloat(updateData.rating) : review.rating,
         tasteRating: updateData.tasteRating ? parseFloat(updateData.tasteRating) : review.tasteRating,

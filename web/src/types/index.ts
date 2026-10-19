@@ -28,6 +28,8 @@ export interface Restaurant {
   bookmarkCount: number;
   koreanStats: KoreanStats;
   profile: RestaurantProfile;
+  tip: TipInfo;
+  businessStatus?: string;
   highlights: { keywords: { key: string; count: number }[]; menus: { name: string; count: number }[] };
   tags?: RestaurantTag[];
   reviews?: Review[];
@@ -38,6 +40,20 @@ export interface ProfileDist {
   counts: Record<string, number>;
   total: number;
   top: string | null;
+}
+
+export interface TipInfo {
+  policy: 'no_tip' | 'included' | 'optional' | 'standard' | 'unknown';
+  source: 'users' | 'ai' | null;
+  confidence: number | null;
+  noTipNeeded: boolean;
+  userReports: { counts: Record<string, number>; total: number };
+  ai: {
+    policy: string | null;
+    confidence: number | null;
+    evidence: { source: string; url?: string; summary: string }[];
+    checkedAt: string | null;
+  };
 }
 
 export interface RestaurantProfile {
@@ -75,6 +91,7 @@ export interface Review {
   crowd?: string | null;
   keywords?: string[];
   menus?: string[];
+  tipReport?: string | null;
   helpedByMe?: boolean;
   likes: number;
   isHelpful: number;

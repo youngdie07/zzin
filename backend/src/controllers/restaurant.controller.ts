@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import prisma from '../config/database';
 import { AuthRequest, optionalUserId } from '../middleware/auth.middleware';
 import { parseImages, serializeImages } from '../utils/images';
+import { withTip } from '../utils/tip';
 import { buildProfile, buildHighlights, serializeReview, valueScore, ProfileKey } from '../utils/profile';
 
 const KOREAN_FLAGS = ['goodForFamily', 'noDiscrimination', 'authenticKorean', 'koreanFriendly'] as const;
@@ -38,6 +39,7 @@ export const getRestaurants = async (req: Request, res: Response) => {
       ];
     }
     if (cuisineType) where.cuisineType = cuisineType;
+    if (req.query.includeClosed !== 'true') where.businessStatus = { not: 'closed' };
     if (priceRange) where.priceRange = parseInt(priceRange as string);
 
     const flagFilters = KOREAN_FLAGS.filter((k) => req.query[k] === 'true');
@@ -59,7 +61,8 @@ export const getRestaurants = async (req: Request, res: Response) => {
             priceValue: true,
             crowd: true,
             keywords: true,
-            menus: true
+            menus: true,
+            tipReport: true
           }
         },
         _count: { select: { bookmarks: true } }
@@ -67,7 +70,7 @@ export const getRestaurants = async (req: Request, res: Response) => {
     });
 
     const all = rows.map(({ reviews, _count, ...restaurant }) => ({
-      ...restaurant,
+      ...withTip(restaurant, reviews),
       images: parseImages(restaurant.images),
       ...summarize(reviews),
       reviewCount: reviews.length,
@@ -78,6 +81,10 @@ export const getRestaurants = async (req: Request, res: Response) => {
     const keyword = req.query.keyword as string | undefined;
     const filtered = all
       .filter((r) => profileFilters.every((k) => r.profile[k].top === req.query[k]))
+      .filter((r) => {
+        const t = req.query.tip as string | undefined;
+        return !t || (t === 'none' ? r.tip.noTipNeeded : r.tip.policy === t);
+      })
       .filter((r) => !keyword || r.highlights.keywords.some((h) => h.key === keyword));
 
     if (sort === 'reviews') filtered.sort((a, b) => b.reviewCount - a.reviewCount);
@@ -134,7 +141,7 @@ export const getRestaurant = async (req: Request, res: Response) => {
     const helpedIds = new Set(helped.map((h) => h.reviewId));
 
     res.json({
-      ...rest,
+      ...withTip(rest, rest.reviews),
       images: parseImages(rest.images),
       reviews: rest.reviews.map((r) => ({ ...serializeReview(r), helpedByMe: helpedIds.has(r.id) })),
       ...summarize(rest.reviews),
@@ -245,7 +252,8 @@ export const getUserBookmarks = async (req: AuthRequest, res: Response) => {
                 priceValue: true,
                 crowd: true,
                 keywords: true,
-                menus: true
+                menus: true,
+                tipReport: true
               }
             }
           }
@@ -258,7 +266,7 @@ export const getUserBookmarks = async (req: AuthRequest, res: Response) => {
       bookmarks.map(({ restaurant: { reviews, ...restaurant }, ...bookmark }) => ({
         ...bookmark,
         restaurant: {
-          ...restaurant,
+          ...withTip(restaurant, reviews),
           images: parseImages(restaurant.images),
           ...summarize(reviews),
           reviewCount: reviews.length

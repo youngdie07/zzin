@@ -44,6 +44,12 @@ function RestaurantCard({ restaurant: r }: { restaurant: Restaurant }) {
           {r.bookmarkCount > 0 && <span className="r-muted">· ☆ {r.bookmarkCount}</span>}
         </div>
         <div className="r-card-badges">
+          {r.tip?.noTipNeeded && (
+            <span className="badge tip">
+              💵 {r.tip.policy === 'included' ? '팁 포함' : '팁 안 받아요'}
+              {r.tip.source === 'ai' ? ' (AI 조사)' : ''}
+            </span>
+          )}
           {profileBadges.map((b) => (
             <span key={b.key} className="badge profile">
               {b.text}

@@ -11,9 +11,12 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "seed": "ts-node --transpile-only prisma/seed.ts",
-    "seed:demo": "SEED_DEMO=1 ts-node --transpile-only prisma/seed.ts"
+    "seed:demo": "SEED_DEMO=1 ts-node --transpile-only prisma/seed.ts",
+    "research:apply": "ts-node --transpile-only prisma/apply-research.ts",
+    "tips:update": "ts-node --transpile-only scripts/update-tip-policy.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.135.0",
     "@prisma/client": "^6.19.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",

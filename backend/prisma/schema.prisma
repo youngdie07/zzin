@@ -45,6 +45,13 @@ model Restaurant {
   images          String?  // 이미지 URL 배열
   description     String?
   isVerified      Boolean   @default(false) // 검증된 정보
+
+  // 팁 정책 (AI 웹 검색 조사 결과) + 영업 상태
+  tipPolicy       String?   // no_tip | included | optional | standard | unknown
+  tipConfidence   Float?    // 0~1
+  tipEvidence     String?   // JSON 배열: [{ source, url, summary }]
+  tipCheckedAt    DateTime?
+  businessStatus  String    @default("unverified") // unverified | open | closed
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -80,6 +87,7 @@ model Review {
   priceValue      String?     // great | fair | poor (가성비)
   crowd           String?     // korean | mixed | local (주 손님층)
   keywords        String?     // JSON 배열: 한국어 주문 가능, 주차 편함 등 키워드
+  tipReport       String?     // no_tip | included | optional | standard (한인이 직접 알려준 팁 정책)
   menus           String?     // JSON 배열: 추천 메뉴
 
   likes           Int         @default(0)

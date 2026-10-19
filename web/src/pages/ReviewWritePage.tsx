@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { reviewService } from '../services/review.service';
 import { restaurantService } from '../services/restaurant.service';
-import { KEYWORDS, KOREAN_TAGS, PROFILE, PROFILE_KEYS, ProfileKey } from '../utils/cuisine';
+import { TIP_OPTIONS, KEYWORDS, KOREAN_TAGS, PROFILE, PROFILE_KEYS, ProfileKey } from '../utils/cuisine';
 
 function StarInput({ label, value, onChange }: { label: string; value: number; onChange: (n: number) => void }) {
   return (
@@ -33,6 +33,7 @@ function ReviewWritePage() {
   const [profile, setProfile] = useState<Partial<Record<ProfileKey, string>>>({});
   const [keywords, setKeywords] = useState<string[]>([]);
   const [menus, setMenus] = useState('');
+  const [tipReport, setTipReport] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -66,6 +67,7 @@ function ReviewWritePage() {
         koreanFriendly: !!flags.koreanFriendly,
         ...profile,
         keywords,
+        tipReport: tipReport || undefined,
         menus: menus.split(',').map((m) => m.trim()).filter(Boolean),
       });
       navigate(`/restaurant/${restaurantId}`);
@@ -132,6 +134,24 @@ function ReviewWritePage() {
                 onClick={() => toggleKeyword(k.key)}
               >
                 {k.emoji} {k.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="q-block">
+          <h4>팁은 어떻게 하셨어요?</h4>
+          <div className="opt-grid four">
+            {TIP_OPTIONS.map((o) => (
+              <button
+                type="button"
+                key={o.value}
+                className={`situation ${tipReport === o.value ? 'on' : ''}`}
+                onClick={() => setTipReport(tipReport === o.value ? '' : o.value)}
+              >
+                <span className="situation-emoji">{o.emoji}</span>
+                <strong>{o.label}</strong>
+                <small>{o.desc}</small>
               </button>
             ))}
           </div>

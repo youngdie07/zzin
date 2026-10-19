@@ -20,6 +20,7 @@ export const reviewService = {
     crowd?: string;
     keywords?: string[];
     menus?: string[];
+    tipReport?: string;
   }): Promise<{ message: string; review: Review }> {
     const response = await api.post('/reviews', data);
     return response.data;

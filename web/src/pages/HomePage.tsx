@@ -15,12 +15,14 @@ function HomePage() {
   const [profileFilter, setProfileFilter] = useState<Partial<Record<ProfileKey, string>>>({});
   const [query, setQuery] = useState('');
   const [keyword, setKeyword] = useState('');
+  const [noTip, setNoTip] = useState(false);
 
   useEffect(() => {
     const params: Record<string, unknown> = { sort, limit: 50 };
     if (cuisine !== '전체') params.cuisineType = cuisine;
     activeTags.forEach((t) => (params[t] = true));
     if (keyword) params.keyword = keyword;
+    if (noTip) params.tip = 'none';
     Object.entries(profileFilter).forEach(([k, v]) => v && (params[k] = v));
 
     setLoading(true);
@@ -29,7 +31,7 @@ function HomePage() {
       .then((res) => setRestaurants(res.restaurants))
       .catch((e) => console.error(e))
       .finally(() => setLoading(false));
-  }, [cuisine, activeTags, sort, profileFilter, keyword]);
+  }, [cuisine, activeTags, sort, profileFilter, keyword, noTip]);
 
   const toggleTag = (param: string) =>
     setActiveTags((prev) => (prev.includes(param) ? prev.filter((t) => t !== param) : [...prev, param]));
@@ -109,6 +111,9 @@ function HomePage() {
         <div className="filter-groups" style={{ marginTop: 8 }}>
           <div className="filter-group">
             <span className="filter-group-title">편의</span>
+            <button className={`chip sm ${noTip ? 'on' : ''}`} onClick={() => setNoTip(!noTip)}>
+              💵 팁 안 줘도 돼요
+            </button>
             {QUICK_KEYWORDS.map((k) => {
               const info = findKeyword(k)!;
               return (
@@ -159,7 +164,11 @@ function HomePage() {
             ))}
           </div>
         ) : (
-          <div className="empty">조건에 맞는 식당이 아직 없어요. 필터를 줄여보세요.</div>
+          <div className="empty">
+            {noTip
+              ? "아직 '팁 안 받는 곳'으로 확인된 식당이 없어요. 다녀오신 곳이 있다면 리뷰에서 팁 정보를 알려주세요!"
+              : '조건에 맞는 식당이 아직 없어요. 필터를 줄여보세요.'}
+          </div>
         )}
       </div>
     </div>
