@@ -5,6 +5,7 @@ import HomePage from './pages/HomePage';
 import RestaurantDetailPage from './pages/RestaurantDetailPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import MapPage from './pages/MapPage';
 import SearchPage from './pages/SearchPage';
 import BookmarksPage from './pages/BookmarksPage';
 import MyPage from './pages/MyPage';
@@ -28,6 +29,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/restaurant/:id" element={<RestaurantDetailPage />} />
           <Route path="/search" element={<SearchPage />} />
+          <Route path="/map" element={<MapPage />} />
           <Route path="/bookmarks" element={
             <ProtectedRoute>
               <BookmarksPage />

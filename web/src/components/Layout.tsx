@@ -19,6 +19,7 @@ function Layout() {
           </Link>
           <nav className="nav">
             <Link to="/search" className="nav-link">검색</Link>
+            <Link to="/map" className="nav-link">지도</Link>
             <Link to="/bookmarks" className="nav-link">북마크</Link>
             {authService.isAuthenticated() ? (
               <Link to="/my-page" className="nav-link">마이페이지</Link>
@@ -43,6 +44,10 @@ function Layout() {
             <Link to="/search" className={`footer-link ${isActive('/search')}`}>
               <span className="icon">🔍</span>
               <span>검색</span>
+            </Link>
+            <Link to="/map" className={`footer-link ${isActive('/map')}`}>
+              <span className="icon">🗺️</span>
+              <span>지도</span>
             </Link>
             <Link to="/bookmarks" className={`footer-link ${isActive('/bookmarks')}`}>
               <span className="icon">⭐</span>
