@@ -3,6 +3,11 @@
 식당별 분류(맛 스타일, 가성비, 손님층, 팁, 상황, 키워드, 추천 메뉴, 한줄평)를 시트에 적으면 앱에 자동 반영됩니다.
 시트에 값이 있으면 **리뷰 집계보다 에디터 분류가 우선**하고, 칸을 비워두면 리뷰 집계를 그대로 씁니다.
 
+**운영 시트:** [ZZIN 식당 분류](https://docs.google.com/spreadsheets/d/1pDehuaphRl2SdDfH6obf-NgajmuvX12xg3ZByOFESbg/edit) (드롭다운·메모 설정 완료, `backend/.env.example` 에 연결돼 있음)
+처음 한 번만: 시트 오른쪽 위 **공유 > 일반 액세스 > 링크가 있는 모든 사용자 (뷰어)** 로 바꿔야 서버가 읽을 수 있어요.
+
+아래는 시트를 새로 만들 때의 방법이에요.
+
 ## 1. 시트 만들기
 1. 구글 시트에서 새 스프레드시트 > 파일 > 가져오기 > 업로드 > `docs/restaurant-template.csv`
 2. (선택) 확장 프로그램 > Apps Script 에 `docs/sheet-dropdowns.gs` 를 붙여넣고 `addDropdowns` 실행 -> 칸마다 드롭다운이 생겨요.
@@ -25,6 +30,7 @@
 - 잘못된 값은 무시하고, 서버 로그나 `npm run sheet:sync` 출력에 "몇 행 어느 식당 어느 칸"으로 알려줘요.
 
 ## 3. 앱과 연결
+링크 공유 시트는 `https://docs.google.com/spreadsheets/d/<시트ID>/export?format=csv&gid=<탭ID>` 형식으로 넣어도 돼요. 또는:
 1. 파일 > 공유 > 웹에 게시 > 시트 선택, 형식 **CSV** > 게시 > 링크 복사
    (링크를 아는 사람은 읽을 수 있지만 수정은 못 해요)
 2. `backend/.env` 에 `SHEET_CSV_URL=복사한 링크` 추가

@@ -161,7 +161,7 @@ export async function loadCsv(source: string): Promise<string> {
   const res = await fetch(source, { signal: AbortSignal.timeout(15000) });
   if (!res.ok) throw new Error(`시트를 불러오지 못했어요 (HTTP ${res.status}).`);
   const text = await res.text();
-  if (/^\s*</.test(text)) throw new Error("시트가 CSV가 아니에요. 구글 시트에서 '웹에 게시 > CSV'로 게시한 링크인지 확인해 주세요.");
+  if (/^\s*</.test(text)) throw new Error("시트가 CSV가 아니에요. 구글 시트 공유가 '링크가 있는 모든 사용자: 뷰어'인지(또는 '웹에 게시 > CSV' 링크인지) 확인해 주세요.");
   return text;
 }
 
