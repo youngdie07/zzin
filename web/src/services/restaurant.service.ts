@@ -1,5 +1,6 @@
 import api from './api';
 import { Restaurant, RestaurantsResponse, Bookmark } from '../types';
+import { BETA_CUISINE } from '../utils/cuisine';
 
 export const restaurantService = {
   // 음식점 목록 조회
@@ -16,8 +17,9 @@ export const restaurantService = {
     page?: number;
     limit?: number;
   }): Promise<RestaurantsResponse> {
+    // 베타: 한식당만 조회
     const response = await api.get<RestaurantsResponse>('/restaurants', {
-      params,
+      params: { ...params, cuisineType: BETA_CUISINE },
     });
     return response.data;
   },
@@ -59,6 +61,8 @@ export const restaurantService = {
   // 사용자 북마크 목록
   async getUserBookmarks(): Promise<Bookmark[]> {
     const response = await api.get<Bookmark[]>('/restaurants/bookmarks');
+    // 베타: 한식당 저장만 표시
+    response.data = response.data.filter((b) => b.restaurant?.cuisineType === BETA_CUISINE);
     return response.data;
   },
 

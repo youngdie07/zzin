@@ -263,12 +263,12 @@ function RestaurantDetailPage() {
                       )}
                     </div>
                     <div className="seg-legend">
-                      {def.options.map((o, i) => (
+                      {def.options.map((o, i) => (o.hidden && !d.counts[o.value] ? null : (
                         <span key={o.value} className={d.top === o.value ? 'top' : ''}>
                           <i className={`dot seg-${i}`} />
-                          {o.emoji} {o.short} {Math.round((d.counts[o.value] / d.total) * 100)}%
+                          {o.emoji} {o.short} {Math.round(((d.counts[o.value] ?? 0) / d.total) * 100)}%
                         </span>
-                      ))}
+                      )))}
                     </div>
                   </>
                 ) : d.editor ? null : (

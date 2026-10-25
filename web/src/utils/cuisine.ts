@@ -21,6 +21,10 @@ export const getCuisineStyle = (cuisine: string) =>
 
 export const CUISINES = ['전체', ...Object.keys(styles)];
 
+// 베타는 한식만. 다른 음식 종류는 정식 버전에서 열어요
+export const BETA_CUISINE = '한식';
+export const BETA_NOTICE = '베타 기간에는 한식당만 보여드려요. 다른 음식점은 정식 버전에서 열려요.';
+
 // 한식 세부 종류
 export const KOREAN_SUBS = [
   { key: 'general', emoji: '🍚', label: '종합 한식' },
@@ -32,6 +36,7 @@ export const KOREAN_SUBS = [
   { key: 'pocha', emoji: '🍶', label: '포차·술집' },
   { key: 'banchan', emoji: '🥡', label: '반찬·도시락' },
   { key: 'fusion', emoji: '🌯', label: '퓨전' },
+  { key: 'cafe', emoji: '🍧', label: '카페·디저트' },
 ] as const;
 
 export const findSub = (key?: string | null) => KOREAN_SUBS.find((s) => s.key === key);
@@ -88,11 +93,26 @@ const ORIGINS: Record<string, string> = {
   한식: '한국', 일식: '일본', 중식: '중국', 태국: '태국', 멕시칸: '멕시코', 베트남: '베트남', 이탈리안: '이탈리아', 인도: '인도', 바비큐: '텍사스',
 };
 
-export type ProfileKey = 'authenticity' | 'palateFit' | 'priceValue' | 'crowd';
+export type ProfileKey = 'authenticity' | 'expectation' | 'palateFit' | 'priceValue' | 'crowd';
 
-type ProfileDef = { title: string; question: string; options: { value: string; emoji: string; label: string; short: string; desc: string }[] };
+// hidden: 예전 값이라 표시만 하고 리뷰·필터에선 고르지 않음
+type ProfileOption = { value: string; emoji: string; label: string; short: string; desc: string; hidden?: boolean };
+type ProfileDef = { title: string; question: string; options: ProfileOption[] };
+
+// 한식은 "본토 느낌" 대신 어떤 한국 맛인지(요즘 / 그 시절 / 미국식)로 구분
+const KOREAN_STYLE: ProfileDef = {
+  title: '한식 스타일',
+  question: '어떤 한국 맛에 가까워요?',
+  options: [
+    { value: 'korean', emoji: '🇰🇷', label: '요즘 한국 스타일', short: '요즘 한국 스타일', desc: '최근 한국에서 먹는 맛과 메뉴' },
+    { value: 'classic', emoji: '🕰️', label: '그 시절 한국 맛', short: '그 시절 한국 맛', desc: '이민 초기부터 이어온 옛날 한식 맛' },
+    { value: 'localized', emoji: '🇺🇸', label: '미국식 한식', short: '미국식 한식', desc: '미국 손님 입맛에 맞춘 한식' },
+    { value: 'mixed', emoji: '🔀', label: '반반', short: '반반', desc: '한국 맛과 미국식 사이', hidden: true },
+  ],
+};
 
 const authenticityFor = (cuisine?: string): ProfileDef => {
+  if (cuisine === '한식') return KOREAN_STYLE;
   const origin = (cuisine && ORIGINS[cuisine]) || '본토';
   return {
     title: '본토 느낌',
@@ -115,6 +135,15 @@ const authenticityFor = (cuisine?: string): ProfileDef => {
 
 export const PROFILE: Record<ProfileKey, ProfileDef> = {
   authenticity: authenticityFor(),
+  expectation: {
+    title: '기대치 가이드',
+    question: '한국 맛 기준으로 어느 정도 기대하면 될까요?',
+    options: [
+      { value: 'high', emoji: '👍', label: '한국 맛 기대해도 돼요', short: '한국 맛 기대해도 돼요', desc: '한국에서 온 사람도 만족할 맛' },
+      { value: 'comfort', emoji: '🍚', label: '그리울 때 무난한 한 끼', short: '그리울 때 무난한 한 끼', desc: '한국 음식 생각날 때 편하게' },
+      { value: 'casual', emoji: '🤝', label: '현지 친구랑 가기 좋아요', short: '현지 친구랑 가기 좋아요', desc: '한식 처음인 친구와 가볍게' },
+    ],
+  },
   palateFit: {
     title: '한국인 입맛',
     question: '한국 사람 입맛에 맞았어요?',
@@ -165,6 +194,9 @@ export const KEYWORDS = [
   { key: 'kind', emoji: '😊', label: '직원 친절' },
   { key: 'late', emoji: '🌙', label: '늦게까지 영업' },
   { key: 'takeout', emoji: '🥡', label: '포장 편함' },
+  { key: 'delivery_only', emoji: '🛵', label: '배달 전문' },
+  { key: 'food_truck', emoji: '🚚', label: '푸드트럭' },
+  { key: 'food_court', emoji: '🏬', label: '푸드코트' },
 ] as const;
 
 export const findKeyword = (key: string) => KEYWORDS.find((k) => k.key === key);

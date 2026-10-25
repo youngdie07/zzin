@@ -5,7 +5,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Restaurant } from '../types';
 import { restaurantService } from '../services/restaurant.service';
-import { CUISINES, getCuisineStyle, cuisineLabel, priceLabel } from '../utils/cuisine';
+import { KOREAN_SUBS, findSub, getCuisineStyle, cuisineLabel, priceLabel } from '../utils/cuisine';
 
 const AUSTIN: [number, number] = [30.2672, -97.7431];
 
@@ -20,9 +20,10 @@ const milesBetween = (a: [number, number], b: [number, number]) => {
 
 const pinIcon = (r: Restaurant, active: boolean) => {
   const style = getCuisineStyle(r.cuisineType);
+  const emoji = findSub(r.subCuisine)?.emoji ?? style.emoji;
   return L.divIcon({
     className: '',
-    html: `<div class="map-pin ${active ? 'active' : ''}" style="background:linear-gradient(135deg,${style.from},${style.to})"><span>${style.emoji}</span></div>`,
+    html: `<div class="map-pin ${active ? 'active' : ''}" style="background:linear-gradient(135deg,${style.from},${style.to})"><span>${emoji}</span></div>`,
     iconSize: [36, 36],
     iconAnchor: [18, 36],
     popupAnchor: [0, -32],
@@ -41,7 +42,7 @@ function FlyTo({ target }: { target: [number, number] | null }) {
 function MapPage() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
-  const [cuisine, setCuisine] = useState('전체');
+  const [sub, setSub] = useState('');
   const [selected, setSelected] = useState<string | null>(null);
   const [me, setMe] = useState<[number, number] | null>(null);
   const [locError, setLocError] = useState('');
@@ -49,14 +50,14 @@ function MapPage() {
 
   useEffect(() => {
     const params: Record<string, unknown> = { limit: 1000 };
-    if (cuisine !== '전체') params.cuisineType = cuisine;
+    if (sub) params.subCuisine = sub;
     setLoading(true);
     restaurantService
       .getRestaurants(params)
       .then((res) => setRestaurants(res.restaurants))
       .catch((e) => console.error(e))
       .finally(() => setLoading(false));
-  }, [cuisine]);
+  }, [sub]);
 
   const locate = () => {
     if (!navigator.geolocation) return setLocError('이 브라우저는 위치 확인을 지원하지 않아요.');
@@ -88,9 +89,12 @@ function MapPage() {
     <div className="map-page">
       <div className="container">
         <div className="chip-row">
-          {CUISINES.map((c) => (
-            <button key={c} className={`chip ${cuisine === c ? 'on' : ''}`} onClick={() => setCuisine(c)}>
-              {c !== '전체' && getCuisineStyle(c).emoji} {c}
+          <button className={`chip ${!sub ? 'on' : ''}`} onClick={() => setSub('')}>
+            전체 한식
+          </button>
+          {KOREAN_SUBS.map((s) => (
+            <button key={s.key} className={`chip ${sub === s.key ? 'on' : ''}`} onClick={() => setSub(sub === s.key ? '' : s.key)}>
+              {s.emoji} {s.label}
             </button>
           ))}
         </div>
@@ -146,7 +150,7 @@ function MapPage() {
               onClick={() => select(r)}
               onKeyDown={(e) => e.key === 'Enter' && select(r)}
             >
-              <span className="map-item-emoji">{getCuisineStyle(r.cuisineType).emoji}</span>
+              <span className="map-item-emoji">{findSub(r.subCuisine)?.emoji ?? getCuisineStyle(r.cuisineType).emoji}</span>
               <span className="map-item-body">
                 <strong>{r.nameKorean || r.name}</strong>
                 <span className="r-muted">

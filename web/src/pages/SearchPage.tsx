@@ -71,7 +71,7 @@ function SearchPage() {
             setInput(e.target.value);
             setParams(e.target.value ? { q: e.target.value } : {});
           }}
-          placeholder="식당 이름, 음식 종류 (예: 국밥, 타코, 일식)"
+          placeholder="식당 이름, 메뉴 (예: 국밥, 순두부, 치킨)"
         />
       </form>
 

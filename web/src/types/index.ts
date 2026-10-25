@@ -33,6 +33,7 @@ export interface Restaurant {
   noDiscrimination: boolean;
   editor: {
     authenticity: string | null;
+    expectation: string | null;
     palateFit: string | null;
     priceValue: string | null;
     crowd: string | null;
@@ -89,6 +90,7 @@ export interface TipInfo {
 
 export interface RestaurantProfile {
   authenticity: ProfileDist;
+  expectation: ProfileDist;
   palateFit: ProfileDist;
   priceValue: ProfileDist;
   crowd: ProfileDist;
@@ -113,6 +115,7 @@ export interface Review {
   atmosphereRating?: number;
   noDiscrimination: boolean;
   authenticity?: string | null;
+  expectation?: string | null;
   palateFit?: string | null;
   priceValue?: string | null;
   crowd?: string | null;

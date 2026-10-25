@@ -4,14 +4,14 @@ import { Restaurant } from '../types';
 import { restaurantService } from '../services/restaurant.service';
 import RestaurantCard from '../components/RestaurantCard';
 import {
-  CUISINES, KOREAN_SUBS, NO_DISCRIMINATION, PROFILE, ProfileKey, QUICK_KEYWORDS, QUICK_PALATE, SITUATIONS, findKeyword, findPalate, getCuisineStyle,
+  BETA_CUISINE, BETA_NOTICE, KOREAN_SUBS, NO_DISCRIMINATION, PROFILE_KEYS, ProfileKey, QUICK_KEYWORDS, QUICK_PALATE, SITUATIONS, findKeyword,
+  findPalate, profileFor,
 } from '../utils/cuisine';
 
 function HomePage() {
   const navigate = useNavigate();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
-  const [cuisine, setCuisine] = useState('전체');
   const [sub, setSub] = useState('');
   const [situation, setSituation] = useState('');
   const [noDiscrimination, setNoDiscrimination] = useState(false);
@@ -24,7 +24,6 @@ function HomePage() {
 
   useEffect(() => {
     const params: Record<string, unknown> = { sort, limit: 1000 };
-    if (cuisine !== '전체') params.cuisineType = cuisine;
     if (sub) params.subCuisine = sub;
     if (situation) params.situation = situation;
     if (noDiscrimination) params.noDiscrimination = true;
@@ -39,7 +38,7 @@ function HomePage() {
       .then((res) => setRestaurants(res.restaurants))
       .catch((e) => console.error(e))
       .finally(() => setLoading(false));
-  }, [cuisine, sub, situation, noDiscrimination, palate, sort, profileFilter, keyword, noTip]);
+  }, [sub, situation, noDiscrimination, palate, sort, profileFilter, keyword, noTip]);
 
   const toggleProfile = (key: ProfileKey, value: string) =>
     setProfileFilter((prev) => ({ ...prev, [key]: prev[key] === value ? undefined : value }));
@@ -59,18 +58,18 @@ function HomePage() {
     <div>
       <section className="hero">
         <div className="container">
-          <p className="hero-eyebrow">AUSTIN, TX · 한인 전용 맛집 평가</p>
+          <p className="hero-eyebrow">AUSTIN, TX · 한인 전용 맛집 평가 · BETA</p>
           <h2>
             미국 평점 말고,
             <br />
-            <span>한국인이 직접 먹어본</span> 오스틴 맛집
+            <span>한국인이 직접 먹어본</span> 오스틴 한식당
           </h2>
-          <p className="hero-desc">한식이든 아니든 상관없어요. 한국인 입맛과 상황에 맞는지만 봅니다.</p>
+          <p className="hero-desc">한국에서 온 사람 기준으로, 어느 정도 기대하면 되는지 알려드려요.</p>
           <form className="hero-search" onSubmit={onSearch}>
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="식당 이름, 음식 종류로 검색 (예: 라멘, 국밥)"
+              placeholder="식당 이름, 메뉴로 검색 (예: 순두부, 국밥)"
             />
             <button type="submit">검색</button>
           </form>
@@ -94,11 +93,11 @@ function HomePage() {
         </div>
 
         <div className="filter-groups">
-          {(Object.keys(PROFILE) as ProfileKey[]).map((k) => (
+          {PROFILE_KEYS.map((k) => (
             <div key={k} className="filter-group">
-              <span className="filter-group-title">{PROFILE[k].title}</span>
-              {PROFILE[k].options
-                .filter((o) => !(k === 'priceValue' && o.value === 'fair') && !['mixed', 'ok'].includes(o.value))
+              <span className="filter-group-title">{profileFor(k, BETA_CUISINE).title}</span>
+              {profileFor(k, BETA_CUISINE)
+                .options.filter((o) => !o.hidden && !(k === 'priceValue' && o.value === 'fair') && !['mixed', 'ok'].includes(o.value))
                 .map((o) => (
                   <button
                     key={o.value}
@@ -149,28 +148,16 @@ function HomePage() {
         </div>
 
         <div className="chip-row">
-          {CUISINES.map((c) => (
-            <button
-              key={c}
-              className={`chip ${cuisine === c ? 'on' : ''}`}
-              onClick={() => {
-                setCuisine(c);
-                setSub('');
-              }}
-            >
-              {c !== '전체' && getCuisineStyle(c).emoji} {c}
+          <button className={`chip ${!sub ? 'on' : ''}`} onClick={() => setSub('')}>
+            전체 한식
+          </button>
+          {KOREAN_SUBS.map((s) => (
+            <button key={s.key} className={`chip ${sub === s.key ? 'on' : ''}`} onClick={() => setSub(sub === s.key ? '' : s.key)}>
+              {s.emoji} {s.label}
             </button>
           ))}
         </div>
-        {cuisine === '한식' && (
-          <div className="chip-row sub-row">
-            {KOREAN_SUBS.map((s) => (
-              <button key={s.key} className={`chip sm ${sub === s.key ? 'on' : ''}`} onClick={() => setSub(sub === s.key ? '' : s.key)}>
-                {s.emoji} {s.label}
-              </button>
-            ))}
-          </div>
-        )}
+        <p className="beta-note">🚧 {BETA_NOTICE}</p>
 
         <div className="list-head">
           <h3 className="section-title" style={{ margin: 0 }}>

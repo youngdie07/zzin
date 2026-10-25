@@ -1,13 +1,14 @@
 import { parseList } from './profile';
 
 const EDITOR_FIELDS = [
-  'editorAuthenticity', 'editorPalateFit', 'editorPalate', 'editorPriceValue', 'editorCrowd', 'editorTip',
+  'editorAuthenticity', 'editorExpectation', 'editorPalateFit', 'editorPalate', 'editorPriceValue', 'editorCrowd', 'editorTip',
   'editorSituations', 'editorKeywords', 'editorMenus', 'editorOrderTip', 'editorNote', 'editorSource', 'editorAiNote', 'editorUpdatedAt'
 ] as const;
 
 export const buildEditor = (r: any) => {
   const editor = {
     authenticity: r.editorAuthenticity ?? null,
+    expectation: r.editorExpectation ?? null,
     palateFit: r.editorPalateFit ?? null,
     priceValue: r.editorPriceValue ?? null,
     crowd: r.editorCrowd ?? null,
@@ -24,7 +25,7 @@ export const buildEditor = (r: any) => {
     updatedAt: r.editorUpdatedAt ?? null
   };
   const hasAny =
-    editor.authenticity || editor.palateFit || editor.priceValue || editor.crowd || editor.tip || editor.orderTip ||
+    editor.authenticity || editor.expectation || editor.palateFit || editor.priceValue || editor.crowd || editor.tip || editor.orderTip ||
     editor.note || editor.palate.length || editor.situations.length || editor.keywords.length || editor.menus.length;
   return hasAny ? editor : null;
 };
@@ -52,7 +53,7 @@ export const applyEditor = (o: any) => {
   o.noDiscrimination = !!e?.situations.includes('noDiscrimination') || o.koreanStats.noDiscriminationCount > 0;
   if (!e) return o;
 
-  for (const k of ['authenticity', 'palateFit', 'priceValue', 'crowd'] as const) {
+  for (const k of ['authenticity', 'expectation', 'palateFit', 'priceValue', 'crowd'] as const) {
     if (e[k]) o.profile[k] = { ...o.profile[k], top: e[k], editor: true };
   }
 

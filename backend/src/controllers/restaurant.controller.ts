@@ -11,6 +11,7 @@ const SUMMARY_FIELDS = {
   rating: true,
   noDiscrimination: true,
   authenticity: true,
+  expectation: true,
   palateFit: true,
   priceValue: true,
   crowd: true,
@@ -47,7 +48,9 @@ export const getRestaurants = async (req: Request, res: Response) => {
         { name: { contains: search as string } },
         { nameKorean: { contains: search as string } },
         { cuisineType: { contains: search as string } },
-        { description: { contains: search as string } }
+        { description: { contains: search as string } },
+        { editorMenus: { contains: search as string } },
+        { editorNote: { contains: search as string } }
       ];
     }
     if (cuisineType) where.cuisineType = cuisineType;
@@ -73,7 +76,7 @@ export const getRestaurants = async (req: Request, res: Response) => {
       })
     ) as any[];
 
-    const profileFilters = (['authenticity', 'palateFit', 'priceValue', 'crowd'] as ProfileKey[]).filter((k) => req.query[k]);
+    const profileFilters = (['authenticity', 'expectation', 'palateFit', 'priceValue', 'crowd'] as ProfileKey[]).filter((k) => req.query[k]);
     const keyword = req.query.keyword as string | undefined;
     const situation = req.query.situation as string | undefined;
     const has = (list: { key: string }[], key: string) => list.some((h) => h.key === key);

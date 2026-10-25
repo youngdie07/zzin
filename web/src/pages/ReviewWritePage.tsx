@@ -96,7 +96,7 @@ function ReviewWritePage() {
           <div key={k} className="q-block">
             <h4>{profileFor(k, cuisine).question}</h4>
             <div className="opt-grid">
-              {profileFor(k, cuisine).options.map((o) => (
+              {profileFor(k, cuisine).options.filter((o) => !o.hidden).map((o) => (
                 <button
                   type="button"
                   key={o.value}

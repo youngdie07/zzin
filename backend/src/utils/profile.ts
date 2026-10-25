@@ -1,7 +1,8 @@
 import { parseImages } from "./images";
 
 export const PROFILE_FIELDS = {
-  authenticity: ['korean', 'mixed', 'localized'],
+  authenticity: ['korean', 'classic', 'mixed', 'localized'],
+  expectation: ['high', 'comfort', 'casual'],
   palateFit: ['good', 'ok', 'bad'],
   priceValue: ['great', 'fair', 'poor'],
   crowd: ['korean', 'mixed', 'local']
@@ -34,6 +35,7 @@ const distribution = (reviews: any[], key: ProfileKey) => {
 
 export const buildProfile = (reviews: any[]) => ({
   authenticity: distribution(reviews, 'authenticity'),
+  expectation: distribution(reviews, 'expectation'),
   palateFit: distribution(reviews, 'palateFit'),
   priceValue: distribution(reviews, 'priceValue'),
   crowd: distribution(reviews, 'crowd')
@@ -50,7 +52,7 @@ export const valueScore = (profile: ReturnType<typeof buildProfile>) => {
 // ---- 키워드 / 입맛 포인트 / 누구랑 / 추천 메뉴 / 주문 팁 ----
 export const KEYWORD_KEYS = [
   'korean_staff', 'big_portion', 'banchan', 'parking', 'no_wait', 'waiting', 'drinks',
-  'reservation', 'clean', 'kind', 'late', 'takeout', 'low_tip'
+  'reservation', 'clean', 'kind', 'late', 'takeout', 'low_tip', 'delivery_only', 'food_truck', 'food_court'
 ] as const;
 export const PALATE_KEYS = ['salty', 'sweet', 'greasy', 'spicy', 'mild', 'rice', 'soup', 'hangover'] as const;
 export const SITUATION_KEYS = ['family', 'parents', 'kids', 'date', 'group', 'solo'] as const;
