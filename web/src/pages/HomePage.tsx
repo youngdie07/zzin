@@ -3,14 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { Restaurant } from '../types';
 import { restaurantService } from '../services/restaurant.service';
 import RestaurantCard from '../components/RestaurantCard';
-import { CUISINES, KOREAN_TAGS, PROFILE, ProfileKey, QUICK_KEYWORDS, findKeyword, getCuisineStyle } from '../utils/cuisine';
+import {
+  CUISINES, NO_DISCRIMINATION, PROFILE, ProfileKey, QUICK_KEYWORDS, QUICK_PALATE, SITUATIONS, findKeyword, findPalate, getCuisineStyle,
+} from '../utils/cuisine';
 
 function HomePage() {
   const navigate = useNavigate();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const [cuisine, setCuisine] = useState('전체');
-  const [activeTags, setActiveTags] = useState<string[]>([]);
+  const [situation, setSituation] = useState('');
+  const [noDiscrimination, setNoDiscrimination] = useState(false);
+  const [palate, setPalate] = useState('');
   const [sort, setSort] = useState('rating');
   const [profileFilter, setProfileFilter] = useState<Partial<Record<ProfileKey, string>>>({});
   const [query, setQuery] = useState('');
@@ -20,7 +24,9 @@ function HomePage() {
   useEffect(() => {
     const params: Record<string, unknown> = { sort, limit: 1000 };
     if (cuisine !== '전체') params.cuisineType = cuisine;
-    activeTags.forEach((t) => (params[t] = true));
+    if (situation) params.situation = situation;
+    if (noDiscrimination) params.noDiscrimination = true;
+    if (palate) params.palate = palate;
     if (keyword) params.keyword = keyword;
     if (noTip) params.tip = 'none';
     Object.entries(profileFilter).forEach(([k, v]) => v && (params[k] = v));
@@ -31,10 +37,7 @@ function HomePage() {
       .then((res) => setRestaurants(res.restaurants))
       .catch((e) => console.error(e))
       .finally(() => setLoading(false));
-  }, [cuisine, activeTags, sort, profileFilter, keyword, noTip]);
-
-  const toggleTag = (param: string) =>
-    setActiveTags((prev) => (prev.includes(param) ? prev.filter((t) => t !== param) : [...prev, param]));
+  }, [cuisine, situation, noDiscrimination, palate, sort, profileFilter, keyword, noTip]);
 
   const toggleProfile = (key: ProfileKey, value: string) =>
     setProfileFilter((prev) => ({ ...prev, [key]: prev[key] === value ? undefined : value }));
@@ -73,17 +76,17 @@ function HomePage() {
       </section>
 
       <div className="container">
-        <h3 className="section-title">어떤 상황이세요?</h3>
+        <h3 className="section-title">누구랑 가세요?</h3>
         <div className="situation-grid">
-          {KOREAN_TAGS.filter((t) => t.param !== 'authenticKorean').map((t) => (
+          {SITUATIONS.map((s) => (
             <button
-              key={t.param}
-              className={`situation ${activeTags.includes(t.param) ? 'on' : ''}`}
-              onClick={() => toggleTag(t.param)}
+              key={s.key}
+              className={`situation ${situation === s.key ? 'on' : ''}`}
+              onClick={() => setSituation(situation === s.key ? '' : s.key)}
             >
-              <span className="situation-emoji">{t.emoji}</span>
-              <strong>{t.label}</strong>
-              <small>{t.desc}</small>
+              <span className="situation-emoji">{s.emoji}</span>
+              <strong>{s.label}</strong>
+              <small>{s.desc}</small>
             </button>
           ))}
         </div>
@@ -93,7 +96,7 @@ function HomePage() {
             <div key={k} className="filter-group">
               <span className="filter-group-title">{PROFILE[k].title}</span>
               {PROFILE[k].options
-                .filter((o) => !(k === 'priceValue' && o.value === 'fair') && !(o.value === 'mixed'))
+                .filter((o) => !(k === 'priceValue' && o.value === 'fair') && !['mixed', 'ok'].includes(o.value))
                 .map((o) => (
                   <button
                     key={o.value}
@@ -110,7 +113,21 @@ function HomePage() {
 
         <div className="filter-groups" style={{ marginTop: 8 }}>
           <div className="filter-group">
+            <span className="filter-group-title">입맛 포인트</span>
+            {QUICK_PALATE.map((k) => {
+              const info = findPalate(k)!;
+              return (
+                <button key={k} className={`chip sm ${palate === k ? 'on' : ''}`} onClick={() => setPalate(palate === k ? '' : k)}>
+                  {info.emoji} {info.label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="filter-group">
             <span className="filter-group-title">편의</span>
+            <button className={`chip sm ${noDiscrimination ? 'on' : ''}`} onClick={() => setNoDiscrimination(!noDiscrimination)}>
+              {NO_DISCRIMINATION.emoji} {NO_DISCRIMINATION.label}
+            </button>
             <button className={`chip sm ${noTip ? 'on' : ''}`} onClick={() => setNoTip(!noTip)}>
               💵 팁 안 줘도 돼요
             </button>

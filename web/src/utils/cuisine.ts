@@ -21,26 +21,76 @@ export const getCuisineStyle = (cuisine: string) =>
 
 export const CUISINES = ['전체', ...Object.keys(styles)];
 
-export const KOREAN_TAGS = [
-  { param: 'goodForFamily', statKey: 'goodForFamilyCount', emoji: '👨‍👩‍👧', label: '가족 모임', desc: '부모님·아이와 가기 좋아요' },
-  { param: 'noDiscrimination', statKey: 'noDiscriminationCount', emoji: '🛡️', label: '차별 없음', desc: '인종차별 걱정 없이 편해요' },
-  { param: 'authenticKorean', statKey: 'authenticKoreanCount', emoji: '🍚', label: '진짜 한식 느낌', desc: '한국에서 먹던 맛이에요' },
-  { param: 'koreanFriendly', statKey: 'koreanFriendlyCount', emoji: '😋', label: '한국인 입맛', desc: '한국인 입맛에 잘 맞아요' },
+// 누구랑 가기 좋은지 (리뷰·시트의 situations)
+export const SITUATIONS = [
+  { key: 'family', emoji: '👨‍👩‍👧', label: '가족 모임', desc: '가족끼리 편하게' },
+  { key: 'parents', emoji: '👵', label: '부모님 모시고', desc: '어른들 입맛·분위기에 맞아요' },
+  { key: 'kids', emoji: '👶', label: '아이 동반', desc: '아이와 가기 편해요' },
+  { key: 'date', emoji: '💑', label: '데이트', desc: '분위기 좋아요' },
+  { key: 'group', emoji: '🍻', label: '회식·단체', desc: '여럿이 가기 좋아요' },
+  { key: 'solo', emoji: '🧍', label: '혼밥', desc: '혼자 가도 편해요' },
 ] as const;
 
-export type ProfileKey = 'authenticity' | 'priceValue' | 'crowd';
+export const findSituation = (key: string) => SITUATIONS.find((s) => s.key === key);
 
-export const PROFILE: Record<
-  ProfileKey,
-  { title: string; question: string; options: { value: string; emoji: string; label: string; short: string; desc: string }[] }
-> = {
-  authenticity: {
-    title: '맛 스타일',
-    question: '한국 사람 기준으로 맛이 어때요?',
+export const NO_DISCRIMINATION = { emoji: '🛡️', label: '차별 없음', desc: '인종차별 걱정 없이 편해요' };
+
+// 한국인 입맛 포인트 (왜 입맛에 맞는지/안 맞는지)
+export const PALATE = [
+  { key: 'salty', emoji: '🧂', label: '많이 짜요' },
+  { key: 'sweet', emoji: '🍯', label: '많이 달아요' },
+  { key: 'greasy', emoji: '🧈', label: '느끼해요' },
+  { key: 'spicy', emoji: '🌶️', label: '매콤해요' },
+  { key: 'mild', emoji: '🍃', label: '담백해요' },
+  { key: 'rice', emoji: '🍚', label: '밥 생각나는 맛' },
+  { key: 'soup', emoji: '🍲', label: '국물 있음' },
+  { key: 'hangover', emoji: '🥣', label: '해장 가능' },
+] as const;
+
+export const findPalate = (key: string) => PALATE.find((p) => p.key === key);
+
+// 홈 화면 입맛 필터에 노출할 포인트 (찾아가고 싶은 이유가 되는 것만)
+export const QUICK_PALATE = ['spicy', 'mild', 'rice', 'soup', 'hangover'];
+
+// 본토 느낌: 음식 종류마다 "어느 나라 맛"인지
+const ORIGINS: Record<string, string> = {
+  한식: '한국', 일식: '일본', 중식: '중국', 태국: '태국', 멕시칸: '멕시코', 베트남: '베트남', 이탈리안: '이탈리아', 인도: '인도', 바비큐: '텍사스',
+};
+
+export type ProfileKey = 'authenticity' | 'palateFit' | 'priceValue' | 'crowd';
+
+type ProfileDef = { title: string; question: string; options: { value: string; emoji: string; label: string; short: string; desc: string }[] };
+
+const authenticityFor = (cuisine?: string): ProfileDef => {
+  const origin = (cuisine && ORIGINS[cuisine]) || '본토';
+  return {
+    title: '본토 느낌',
+    question: cuisine === '한식' ? '한국에서 먹던 맛이랑 비교하면?' : origin === '본토' ? '원래 그 나라 맛이랑 비교하면?' : `${origin} 현지 맛이랑 비교하면?`,
     options: [
-      { value: 'korean', emoji: '🇰🇷', label: '한국 맛 그대로', short: '한국 맛 그대로', desc: '한국에서 먹던 그 맛' },
-      { value: 'mixed', emoji: '🔀', label: '반반', short: '약간 현지화', desc: '한국 맛에 현지 느낌이 섞임' },
-      { value: 'localized', emoji: '🤠', label: '현지화됨', short: '현지인 입맛', desc: '현지인 입맛에 맞게 변형됨' },
+      { value: 'korean', emoji: cuisine === '한식' ? '🇰🇷' : '📍', label: `${origin} 맛 그대로`, short: `${origin} 맛 그대로`, desc: `${origin}에서 먹는 그 맛` },
+      // 텍사스 바비큐는 원래 미국 음식이라 "미국식" 대신 체인점 스타일로 표현
+      ...(cuisine === '바비큐'
+        ? [
+            { value: 'mixed', emoji: '🔀', label: '반반', short: '반반', desc: '정통과 대중적인 맛 사이' },
+            { value: 'localized', emoji: '🏪', label: '체인점 스타일', short: '체인점 스타일', desc: '정통보다 대중적인 맛' },
+          ]
+        : [
+            { value: 'mixed', emoji: '🔀', label: '반반', short: '약간 미국식', desc: `${origin} 맛에 미국식이 섞임` },
+            { value: 'localized', emoji: '🇺🇸', label: '미국식', short: '미국식', desc: '미국 사람 입맛에 맞게 바뀜' },
+          ]),
+    ],
+  };
+};
+
+export const PROFILE: Record<ProfileKey, ProfileDef> = {
+  authenticity: authenticityFor(),
+  palateFit: {
+    title: '한국인 입맛',
+    question: '한국 사람 입맛에 맞았어요?',
+    options: [
+      { value: 'good', emoji: '😋', label: '잘 맞아요', short: '한국인 입맛에 맞음', desc: '한국 사람이 좋아할 맛' },
+      { value: 'ok', emoji: '🙂', label: '무난해요', short: '입맛 무난', desc: '호불호 없이 먹을 만함' },
+      { value: 'bad', emoji: '😕', label: '안 맞아요', short: '입맛 안 맞음', desc: '짜거나 달거나 느끼해서 아쉬움' },
     ],
   },
   priceValue: {
@@ -65,8 +115,11 @@ export const PROFILE: Record<
 
 export const PROFILE_KEYS = Object.keys(PROFILE) as ProfileKey[];
 
-export const findOption = (key: ProfileKey, value?: string | null) =>
-  PROFILE[key].options.find((o) => o.value === value);
+// 음식 종류를 알면 본토 느낌 문구를 그 나라에 맞춰 바꿈
+export const profileFor = (key: ProfileKey, cuisine?: string) => (key === 'authenticity' ? authenticityFor(cuisine) : PROFILE[key]);
+
+export const findOption = (key: ProfileKey, value?: string | null, cuisine?: string) =>
+  profileFor(key, cuisine).options.find((o) => o.value === value);
 
 export const KEYWORDS = [
   { key: 'korean_staff', emoji: '🗣️', label: '한국어 주문 가능' },
@@ -75,10 +128,7 @@ export const KEYWORDS = [
   { key: 'parking', emoji: '🅿️', label: '주차 편함' },
   { key: 'no_wait', emoji: '⏱️', label: '웨이팅 적음' },
   { key: 'waiting', emoji: '⏳', label: '웨이팅 김' },
-  { key: 'solo', emoji: '🧍', label: '혼밥 OK' },
   { key: 'drinks', emoji: '🍶', label: '소주·술 OK' },
-  { key: 'kids', emoji: '👶', label: '아이 동반 OK' },
-  { key: 'group', emoji: '🍻', label: '단체·회식 OK' },
   { key: 'reservation', emoji: '📅', label: '예약 필수' },
   { key: 'clean', emoji: '✨', label: '깔끔·청결' },
   { key: 'kind', emoji: '😊', label: '직원 친절' },
@@ -89,7 +139,7 @@ export const KEYWORDS = [
 export const findKeyword = (key: string) => KEYWORDS.find((k) => k.key === key);
 
 // 홈 화면 빠른 필터에 노출할 키워드
-export const QUICK_KEYWORDS = ['korean_staff', 'parking', 'solo', 'drinks', 'kids', 'takeout'];
+export const QUICK_KEYWORDS = ['korean_staff', 'parking', 'drinks', 'takeout'];
 
 export const TIP_OPTIONS = [
   { value: 'no_tip', emoji: '💵', label: '팁 안 받아요', short: '팁 없음', desc: '노팁 정책, 팁을 받지 않음' },

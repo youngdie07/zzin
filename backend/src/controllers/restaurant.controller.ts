@@ -6,7 +6,21 @@ import { withTip } from '../utils/tip';
 import { applyEditor } from '../utils/editor';
 import { buildProfile, buildHighlights, serializeReview, valueScore, ProfileKey } from '../utils/profile';
 
-const KOREAN_FLAGS = ['goodForFamily', 'noDiscrimination', 'authenticKorean', 'koreanFriendly'] as const;
+// 목록/북마크에서 집계에 필요한 리뷰 필드
+const SUMMARY_FIELDS = {
+  rating: true,
+  noDiscrimination: true,
+  authenticity: true,
+  palateFit: true,
+  priceValue: true,
+  crowd: true,
+  keywords: true,
+  palate: true,
+  situations: true,
+  menus: true,
+  orderTip: true,
+  tipReport: true
+} as const;
 
 const summarize = (reviews: any[]) => {
   const avg = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
@@ -15,10 +29,7 @@ const summarize = (reviews: any[]) => {
     profile: buildProfile(reviews),
     highlights: buildHighlights(reviews),
     koreanStats: {
-      goodForFamilyCount: reviews.filter((r) => r.goodForFamily).length,
       noDiscriminationCount: reviews.filter((r) => r.noDiscrimination).length,
-      authenticKoreanCount: reviews.filter((r) => r.authenticKorean).length,
-      koreanFriendlyCount: reviews.filter((r) => r.koreanFriendly).length,
       totalReviews: reviews.length
     }
   };
@@ -43,26 +54,10 @@ export const getRestaurants = async (req: Request, res: Response) => {
     if (req.query.includeClosed !== 'true') where.businessStatus = { not: 'closed' };
     if (priceRange) where.priceRange = parseInt(priceRange as string);
 
-    const flagFilters = KOREAN_FLAGS.filter((k) => req.query[k] === 'true');
-
     const rows = await prisma.restaurant.findMany({
       where,
       include: {
-        reviews: {
-          select: {
-            rating: true,
-            goodForFamily: true,
-            noDiscrimination: true,
-            authenticKorean: true,
-            koreanFriendly: true,
-            authenticity: true,
-            priceValue: true,
-            crowd: true,
-            keywords: true,
-            menus: true,
-            tipReport: true
-          }
-        },
+        reviews: { select: SUMMARY_FIELDS },
         _count: { select: { bookmarks: true } }
       }
     });
@@ -77,10 +72,14 @@ export const getRestaurants = async (req: Request, res: Response) => {
       })
     ) as any[];
 
-    const profileFilters = (['authenticity', 'priceValue', 'crowd'] as ProfileKey[]).filter((k) => req.query[k]);
+    const profileFilters = (['authenticity', 'palateFit', 'priceValue', 'crowd'] as ProfileKey[]).filter((k) => req.query[k]);
     const keyword = req.query.keyword as string | undefined;
+    const situation = req.query.situation as string | undefined;
+    const has = (list: { key: string }[], key: string) => list.some((h) => h.key === key);
     const filtered = all
-      .filter((r) => flagFilters.every((k) => r.situations[k]))
+      .filter((r) => req.query.noDiscrimination !== 'true' || r.noDiscrimination)
+      .filter((r) => !situation || has(r.highlights.situations, situation))
+      .filter((r) => !req.query.palate || has(r.highlights.palate, req.query.palate as string))
       .filter((r) => profileFilters.every((k) => r.profile[k].top === req.query[k]))
       .filter((r) => {
         const t = req.query.tip as string | undefined;
@@ -244,21 +243,7 @@ export const getUserBookmarks = async (req: AuthRequest, res: Response) => {
       include: {
         restaurant: {
           include: {
-            reviews: {
-              select: {
-                rating: true,
-                goodForFamily: true,
-                noDiscrimination: true,
-                authenticKorean: true,
-                koreanFriendly: true,
-                authenticity: true,
-                priceValue: true,
-                crowd: true,
-                keywords: true,
-                menus: true,
-                tipReport: true
-              }
-            }
+            reviews: { select: SUMMARY_FIELDS }
           }
         }
       },

@@ -29,22 +29,37 @@ export interface Restaurant {
   koreanStats: KoreanStats;
   profile: RestaurantProfile;
   tip: TipInfo;
-  situations: { goodForFamily: boolean; noDiscrimination: boolean; authenticKorean: boolean; koreanFriendly: boolean };
+  noDiscrimination: boolean;
   editor: {
     authenticity: string | null;
+    palateFit: string | null;
     priceValue: string | null;
     crowd: string | null;
     tip: string | null;
+    palate: string[];
     situations: string[];
     keywords: string[];
     menus: string[];
+    orderTip: string | null;
     note: string | null;
     updatedAt: string | null;
   } | null;
   businessStatus?: string;
-  highlights: { keywords: { key: string; count: number; editor?: boolean }[]; menus: { name: string; count: number; editor?: boolean }[] };
+  highlights: {
+    keywords: KeyCount[];
+    palate: KeyCount[];
+    situations: KeyCount[];
+    menus: { name: string; count: number; editor?: boolean }[];
+    orderTips: string[];
+  };
   tags?: RestaurantTag[];
   reviews?: Review[];
+}
+
+export interface KeyCount {
+  key: string;
+  count: number;
+  editor?: boolean;
 }
 
 // 식당 성향 집계
@@ -71,16 +86,14 @@ export interface TipInfo {
 
 export interface RestaurantProfile {
   authenticity: ProfileDist;
+  palateFit: ProfileDist;
   priceValue: ProfileDist;
   crowd: ProfileDist;
 }
 
 // 한국인 맞춤 통계
 export interface KoreanStats {
-  goodForFamilyCount: number;
   noDiscriminationCount: number;
-  authenticKoreanCount: number;
-  koreanFriendlyCount: number;
   totalReviews: number;
 }
 
@@ -95,15 +108,16 @@ export interface Review {
   tasteRating?: number;
   serviceRating?: number;
   atmosphereRating?: number;
-  goodForFamily: boolean;
   noDiscrimination: boolean;
-  authenticKorean: boolean;
-  koreanFriendly: boolean;
   authenticity?: string | null;
+  palateFit?: string | null;
   priceValue?: string | null;
   crowd?: string | null;
   keywords?: string[];
+  palate?: string[];
+  situations?: string[];
   menus?: string[];
+  orderTip?: string | null;
   tipReport?: string | null;
   helpedByMe?: boolean;
   likes: number;

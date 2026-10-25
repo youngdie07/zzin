@@ -38,13 +38,24 @@ export function parseCsv(input: string): string[][] {
 
 const COLUMNS: Record<string, string> = {
   '식당명': 'name', '한글명': 'nameKorean', '음식종류': 'cuisine', '주소': 'address', '가격대': 'price',
-  '전화': 'phone', '영업상태': 'status', '맛스타일': 'authenticity', '가성비': 'priceValue', '손님층': 'crowd',
-  '팁': 'tip', '상황': 'situations', '키워드': 'keywords', '추천메뉴': 'menus', '한줄평': 'note',
+  '전화': 'phone', '영업상태': 'status', '본토느낌': 'authenticity', '맛스타일': 'authenticity',
+  '한국인입맛': 'palateFit', '입맛포인트': 'palate', '가성비': 'priceValue', '손님층': 'crowd',
+  '팁': 'tip', '상황': 'situations', '누구랑': 'situations', '키워드': 'keywords', '추천메뉴': 'menus',
+  '주문팁': 'orderTip', '한줄평': 'note',
   '위도': 'lat', '경도': 'lng'
 };
 
 // "식당명(영문)", "가격대(1-4)" 처럼 괄호 설명이 붙어 있어도 인식
 const headerKey = (h: string) => COLUMNS[h.replace(/\(.*?\)/g, '').replace(/\s+/g, '')];
+
+// 오류 메시지에 쓸 칸 이름
+const COLUMN_NAMES: Record<string, string> = {
+  status: '영업상태', authenticity: '본토 느낌', palateFit: '한국인 입맛', palate: '입맛 포인트', priceValue: '가성비',
+  crowd: '손님층', tip: '팁', situations: '상황', keywords: '키워드'
+};
+
+// 키워드에서 상황으로 옮긴 항목은 어디에 적으면 되는지 알려줌
+const MOVED_TO_SITUATIONS: Record<string, string> = { '아이 동반 OK': '아이 동반', '단체·회식 OK': '회식·단체', '혼밥 OK': '혼밥' };
 
 const AUSTIN_CENTER = { lat: 30.2672, lng: -97.7431 };
 const splitMulti = (s: string) => s.split(/[,，;/]/).map((x) => x.trim()).filter(Boolean);
@@ -82,7 +93,7 @@ export async function syncSheet(prisma: PrismaClient, csv: string): Promise<Sync
     const single = (key: string, group: LabelGroup): string | null => {
       if (!cell[key]) return null;
       const v = toValue(group, cell[key]);
-      if (!v) result.errors.push(`${label}: '${cell[key]}' 는 ${key} 칸에 쓸 수 없는 값이에요.`);
+      if (!v) result.errors.push(`${label}: '${cell[key]}' 는 ${COLUMN_NAMES[key] ?? key} 칸에 쓸 수 없는 값이에요.`);
       return v;
     };
     const multi = (key: string, group: LabelGroup): string[] => {
@@ -90,19 +101,24 @@ export async function syncSheet(prisma: PrismaClient, csv: string): Promise<Sync
       for (const part of splitMulti(cell[key] ?? '')) {
         const v = toValue(group, part);
         if (v) out.push(v);
-        else result.errors.push(`${label}: '${part}' 는 ${key} 칸에 쓸 수 없는 값이에요.`);
+        else if (key === 'keywords' && MOVED_TO_SITUATIONS[part])
+          result.errors.push(`${label}: '${part}' 는 이제 상황 칸에 '${MOVED_TO_SITUATIONS[part]}'(으)로 적어주세요.`);
+        else result.errors.push(`${label}: '${part}' 는 ${COLUMN_NAMES[key] ?? key} 칸에 쓸 수 없는 값이에요.`);
       }
       return [...new Set(out)];
     };
 
     const editor = {
       editorAuthenticity: single('authenticity', 'authenticity'),
+      editorPalateFit: single('palateFit', 'palateFit'),
+      editorPalate: JSON.stringify(multi('palate', 'palate')),
       editorPriceValue: single('priceValue', 'priceValue'),
       editorCrowd: single('crowd', 'crowd'),
       editorTip: single('tip', 'tip'),
       editorSituations: JSON.stringify(multi('situations', 'situations')),
       editorKeywords: JSON.stringify(multi('keywords', 'keywords')),
       editorMenus: JSON.stringify(splitMulti(cell.menus ?? '').slice(0, 8).map((m) => m.slice(0, 30))),
+      editorOrderTip: cell.orderTip ? cell.orderTip.slice(0, 120) : null,
       editorNote: cell.note || null
     };
     const status = cell.status ? toValue('status', cell.status) : null;

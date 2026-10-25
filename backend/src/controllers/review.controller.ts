@@ -17,10 +17,7 @@ export const createReview = async (req: AuthRequest, res: Response) => {
       tasteRating,
       serviceRating,
       atmosphereRating,
-      goodForFamily,
-      noDiscrimination,
-      authenticKorean,
-      koreanFriendly
+      noDiscrimination
     } = req.body;
 
     // 음식점 존재 확인
@@ -55,10 +52,7 @@ export const createReview = async (req: AuthRequest, res: Response) => {
         tasteRating: tasteRating ? parseFloat(tasteRating) : null,
         serviceRating: serviceRating ? parseFloat(serviceRating) : null,
         atmosphereRating: atmosphereRating ? parseFloat(atmosphereRating) : null,
-        goodForFamily: goodForFamily || false,
         noDiscrimination: noDiscrimination !== false, // 기본값 true
-        authenticKorean: authenticKorean || req.body.authenticity === 'korean',
-        koreanFriendly: koreanFriendly || false,
         ...sanitizeProfile(req.body),
         ...sanitizeExtras(req.body),
         ...sanitizeTipReport(req.body)

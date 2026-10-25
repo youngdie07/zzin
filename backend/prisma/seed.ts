@@ -6,7 +6,7 @@ import { applyResearch } from './apply-research';
 
 const prisma = new PrismaClient();
 
-// 플래그: f=가족 모임, d=차별 없음, a=진짜 한식 느낌, k=한국인 입맛
+// 플래그: f=가족 모임, d=차별 없음, a=본토 맛 그대로, k=한국인 입맛에 맞음
 type Rev = [user: number, rating: number, flags: string, text: string];
 
 interface Seed {
@@ -223,14 +223,12 @@ async function main() {
           tasteRating: rating,
           serviceRating: Math.max(1, rating - (flags.includes('d') ? 0 : 1)),
           atmosphereRating: Math.max(1, rating - (u % 2)),
-          goodForFamily: flags.includes('f'),
           noDiscrimination: flags.includes('d'),
-          authenticKorean: flags.includes('a'),
-          koreanFriendly: flags.includes('k'),
-          authenticity: ['한식', '퓨전'].includes(r.cuisine) ? (flags.includes('a') ? 'korean' : flags.includes('k') ? 'mixed' : 'localized') : null,
+          authenticity: flags.includes('a') ? 'korean' : flags.includes('k') ? 'mixed' : 'localized',
+          palateFit: flags.includes('k') ? 'good' : rating >= 4 ? 'ok' : 'bad',
+          situations: flags.includes('f') ? JSON.stringify(['family', 'kids', 'group']) : null,
           priceValue: rating >= 5 ? 'great' : rating >= 4 ? 'fair' : 'poor',
           keywords: JSON.stringify([
-            ...(flags.includes('f') ? ['kids', 'group'] : []),
             ...(flags.includes('d') ? ['kind'] : []),
             ...(flags.includes('a') ? ['korean_staff', 'banchan'] : []),
             ...(flags.includes('k') ? ['big_portion'] : []),

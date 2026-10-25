@@ -11,15 +11,16 @@ export const reviewService = {
     tasteRating?: number;
     serviceRating?: number;
     atmosphereRating?: number;
-    goodForFamily?: boolean;
     noDiscrimination?: boolean;
-    authenticKorean?: boolean;
-    koreanFriendly?: boolean;
     authenticity?: string;
+    palateFit?: string;
     priceValue?: string;
     crowd?: string;
     keywords?: string[];
+    palate?: string[];
+    situations?: string[];
     menus?: string[];
+    orderTip?: string;
     tipReport?: string;
   }): Promise<{ message: string; review: Review }> {
     const response = await api.post('/reviews', data);

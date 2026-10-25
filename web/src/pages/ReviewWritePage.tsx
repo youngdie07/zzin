@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { reviewService } from '../services/review.service';
 import { restaurantService } from '../services/restaurant.service';
-import { TIP_OPTIONS, KEYWORDS, KOREAN_TAGS, PROFILE, PROFILE_KEYS, ProfileKey } from '../utils/cuisine';
+import { TIP_OPTIONS, KEYWORDS, NO_DISCRIMINATION, PALATE, PROFILE_KEYS, ProfileKey, SITUATIONS, profileFor } from '../utils/cuisine';
 
 function StarInput({ label, value, onChange }: { label: string; value: number; onChange: (n: number) => void }) {
   return (
@@ -29,10 +29,13 @@ function ReviewWritePage() {
   const [service, setService] = useState(5);
   const [atmosphere, setAtmosphere] = useState(5);
   const [content, setContent] = useState('');
-  const [flags, setFlags] = useState<Record<string, boolean>>({ noDiscrimination: true });
+  const [noDiscrimination, setNoDiscrimination] = useState(true);
   const [profile, setProfile] = useState<Partial<Record<ProfileKey, string>>>({});
+  const [situations, setSituations] = useState<string[]>([]);
+  const [palate, setPalate] = useState<string[]>([]);
   const [keywords, setKeywords] = useState<string[]>([]);
   const [menus, setMenus] = useState('');
+  const [orderTip, setOrderTip] = useState('');
   const [tipReport, setTipReport] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -45,10 +48,11 @@ function ReviewWritePage() {
     });
   }, [restaurantId]);
 
-  const showKey = (k: ProfileKey) => k !== 'authenticity' || ['한식', '퓨전'].includes(cuisine);
-
-  const toggleKeyword = (k: string) =>
-    setKeywords((prev) => (prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k]));
+  const toggleIn = (setter: React.Dispatch<React.SetStateAction<string[]>>) => (k: string) =>
+    setter((prev) => (prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k]));
+  const toggleKeyword = toggleIn(setKeywords);
+  const toggleSituation = toggleIn(setSituations);
+  const togglePalate = toggleIn(setPalate);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,13 +66,14 @@ function ReviewWritePage() {
         tasteRating: taste,
         serviceRating: service,
         atmosphereRating: atmosphere,
-        goodForFamily: !!flags.goodForFamily,
-        noDiscrimination: !!flags.noDiscrimination,
-        koreanFriendly: !!flags.koreanFriendly,
+        noDiscrimination,
         ...profile,
+        situations,
+        palate,
         keywords,
         tipReport: tipReport || undefined,
         menus: menus.split(',').map((m) => m.trim()).filter(Boolean),
+        orderTip: orderTip.trim() || undefined,
       });
       navigate(`/restaurant/${restaurantId}`);
     } catch (err: any) {
@@ -87,11 +92,11 @@ function ReviewWritePage() {
         <StarInput label="서비스" value={service} onChange={setService} />
         <StarInput label="분위기" value={atmosphere} onChange={setAtmosphere} />
 
-        {PROFILE_KEYS.filter(showKey).map((k) => (
+        {PROFILE_KEYS.map((k) => (
           <div key={k} className="q-block">
-            <h4>{PROFILE[k].question}</h4>
+            <h4>{profileFor(k, cuisine).question}</h4>
             <div className="opt-grid">
-              {PROFILE[k].options.map((o) => (
+              {profileFor(k, cuisine).options.map((o) => (
                 <button
                   type="button"
                   key={o.value}
@@ -108,18 +113,41 @@ function ReviewWritePage() {
         ))}
 
         <div className="q-block">
-          <h4>어떤 상황에 좋은가요?</h4>
+          <h4>입맛 포인트를 골라주세요 (여러 개)</h4>
           <div className="kw-pick">
-            {KOREAN_TAGS.filter((t) => t.param !== 'authenticKorean').map((t) => (
+            {PALATE.map((p) => (
               <button
                 type="button"
-                key={t.param}
-                className={`chip ${flags[t.param] ? 'on' : ''}`}
-                onClick={() => setFlags({ ...flags, [t.param]: !flags[t.param] })}
+                key={p.key}
+                className={`chip ${palate.includes(p.key) ? 'on' : ''}`}
+                onClick={() => togglePalate(p.key)}
               >
-                {t.emoji} {t.label}
+                {p.emoji} {p.label}
               </button>
             ))}
+          </div>
+        </div>
+
+        <div className="q-block">
+          <h4>누구랑 가기 좋아요?</h4>
+          <div className="kw-pick">
+            {SITUATIONS.map((s) => (
+              <button
+                type="button"
+                key={s.key}
+                className={`chip ${situations.includes(s.key) ? 'on' : ''}`}
+                onClick={() => toggleSituation(s.key)}
+              >
+                {s.emoji} {s.label}
+              </button>
+            ))}
+            <button
+              type="button"
+              className={`chip ${noDiscrimination ? 'on' : ''}`}
+              onClick={() => setNoDiscrimination(!noDiscrimination)}
+            >
+              {NO_DISCRIMINATION.emoji} {NO_DISCRIMINATION.label}
+            </button>
           </div>
         </div>
 
@@ -160,6 +188,17 @@ function ReviewWritePage() {
         <div className="q-block">
           <h4>추천 메뉴 (쉼표로 구분, 최대 5개)</h4>
           <input className="input" placeholder="예: 갈비탕, 비빔밥" value={menus} onChange={(e) => setMenus(e.target.value)} />
+        </div>
+
+        <div className="q-block">
+          <h4>주문 팁 (선택)</h4>
+          <input
+            className="input"
+            maxLength={120}
+            placeholder="예: 덜 짜게 해달라고(less salt) 하세요, 핫소스는 따로 달라고 해야 줘요"
+            value={orderTip}
+            onChange={(e) => setOrderTip(e.target.value)}
+          />
         </div>
 
         <textarea

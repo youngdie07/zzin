@@ -2,6 +2,7 @@ import { parseImages } from "./images";
 
 export const PROFILE_FIELDS = {
   authenticity: ['korean', 'mixed', 'localized'],
+  palateFit: ['good', 'ok', 'bad'],
   priceValue: ['great', 'fair', 'poor'],
   crowd: ['korean', 'mixed', 'local']
 } as const;
@@ -33,6 +34,7 @@ const distribution = (reviews: any[], key: ProfileKey) => {
 
 export const buildProfile = (reviews: any[]) => ({
   authenticity: distribution(reviews, 'authenticity'),
+  palateFit: distribution(reviews, 'palateFit'),
   priceValue: distribution(reviews, 'priceValue'),
   crowd: distribution(reviews, 'crowd')
 });
@@ -45,11 +47,14 @@ export const valueScore = (profile: ReturnType<typeof buildProfile>) => {
   return total ? (counts.great + counts.fair * 0.5) / total : 0;
 };
 
-// ---- 키워드 / 추천 메뉴 ----
+// ---- 키워드 / 입맛 포인트 / 누구랑 / 추천 메뉴 / 주문 팁 ----
 export const KEYWORD_KEYS = [
-  'korean_staff', 'big_portion', 'banchan', 'parking', 'no_wait', 'waiting', 'solo', 'drinks',
-  'kids', 'group', 'reservation', 'clean', 'kind', 'late', 'takeout', 'low_tip'
+  'korean_staff', 'big_portion', 'banchan', 'parking', 'no_wait', 'waiting', 'drinks',
+  'reservation', 'clean', 'kind', 'late', 'takeout', 'low_tip'
 ] as const;
+export const PALATE_KEYS = ['salty', 'sweet', 'greasy', 'spicy', 'mild', 'rice', 'soup', 'hangover'] as const;
+export const SITUATION_KEYS = ['family', 'parents', 'kids', 'date', 'group', 'solo'] as const;
+const ORDER_TIP_MAX = 120;
 
 export const parseList = (value: unknown): string[] => {
   if (Array.isArray(value)) return value.map(String);
@@ -64,15 +69,23 @@ export const parseList = (value: unknown): string[] => {
   return [];
 };
 
+const pickList = (value: unknown, allowed: readonly string[]) => {
+  const list = parseList(value).filter((k) => allowed.includes(k));
+  return list.length ? JSON.stringify([...new Set(list)]) : null;
+};
+
 export const sanitizeExtras = (body: Record<string, unknown>) => {
-  const out: { keywords?: string | null; menus?: string | null } = {};
-  if (body.keywords !== undefined) {
-    const list = parseList(body.keywords).filter((k) => (KEYWORD_KEYS as readonly string[]).includes(k));
-    out.keywords = list.length ? JSON.stringify([...new Set(list)]) : null;
-  }
+  const out: { keywords?: string | null; palate?: string | null; situations?: string | null; menus?: string | null; orderTip?: string | null } = {};
+  if (body.keywords !== undefined) out.keywords = pickList(body.keywords, KEYWORD_KEYS);
+  if (body.palate !== undefined) out.palate = pickList(body.palate, PALATE_KEYS);
+  if (body.situations !== undefined) out.situations = pickList(body.situations, SITUATION_KEYS);
   if (body.menus !== undefined) {
     const list = parseList(body.menus).map((m) => m.trim().slice(0, 30)).filter(Boolean).slice(0, 5);
     out.menus = list.length ? JSON.stringify(list) : null;
+  }
+  if (body.orderTip !== undefined) {
+    const tip = typeof body.orderTip === 'string' ? body.orderTip.trim().slice(0, ORDER_TIP_MAX) : '';
+    out.orderTip = tip || null;
   }
   return out;
 };
@@ -88,14 +101,22 @@ const topCounts = (items: string[], limit: number, keyFn: (s: string) => string 
   return [...map.values()].sort((a, b) => b.count - a.count).slice(0, limit);
 };
 
+const countKeys = (reviews: any[], field: string) =>
+  topCounts(reviews.flatMap((r) => parseList(r[field])), 20).map((x) => ({ key: x.name, count: x.count }));
+
 export const buildHighlights = (reviews: any[]) => ({
-  keywords: topCounts(reviews.flatMap((r) => parseList(r.keywords)), 20).map((x) => ({ key: x.name, count: x.count })),
-  menus: topCounts(reviews.flatMap((r) => parseList(r.menus)), 6, (s) => s.toLowerCase().replace(/\s+/g, ''))
+  keywords: countKeys(reviews, 'keywords'),
+  palate: countKeys(reviews, 'palate'),
+  situations: countKeys(reviews, 'situations'),
+  menus: topCounts(reviews.flatMap((r) => parseList(r.menus)), 6, (s) => s.toLowerCase().replace(/\s+/g, '')),
+  orderTips: reviews.map((r) => r.orderTip).filter(Boolean).slice(0, 5) as string[]
 });
 
 export const serializeReview = (r: any) => ({
   ...r,
   images: parseImages(r.images),
   keywords: parseList(r.keywords),
+  palate: parseList(r.palate),
+  situations: parseList(r.situations),
   menus: parseList(r.menus)
 });

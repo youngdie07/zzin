@@ -1,25 +1,28 @@
 import { parseList } from './profile';
 
 const EDITOR_FIELDS = [
-  'editorAuthenticity', 'editorPriceValue', 'editorCrowd', 'editorTip', 'editorSituations',
-  'editorKeywords', 'editorMenus', 'editorNote', 'editorUpdatedAt'
+  'editorAuthenticity', 'editorPalateFit', 'editorPalate', 'editorPriceValue', 'editorCrowd', 'editorTip',
+  'editorSituations', 'editorKeywords', 'editorMenus', 'editorOrderTip', 'editorNote', 'editorUpdatedAt'
 ] as const;
 
 export const buildEditor = (r: any) => {
   const editor = {
     authenticity: r.editorAuthenticity ?? null,
+    palateFit: r.editorPalateFit ?? null,
     priceValue: r.editorPriceValue ?? null,
     crowd: r.editorCrowd ?? null,
     tip: r.editorTip ?? null,
+    palate: parseList(r.editorPalate),
     situations: parseList(r.editorSituations),
     keywords: parseList(r.editorKeywords),
     menus: parseList(r.editorMenus),
+    orderTip: r.editorOrderTip ?? null,
     note: r.editorNote ?? null,
     updatedAt: r.editorUpdatedAt ?? null
   };
   const hasAny =
-    editor.authenticity || editor.priceValue || editor.crowd || editor.tip || editor.note ||
-    editor.situations.length || editor.keywords.length || editor.menus.length;
+    editor.authenticity || editor.palateFit || editor.priceValue || editor.crowd || editor.tip || editor.orderTip ||
+    editor.note || editor.palate.length || editor.situations.length || editor.keywords.length || editor.menus.length;
   return hasAny ? editor : null;
 };
 
@@ -31,27 +34,28 @@ export const stripEditorFields = <T extends Record<string, any>>(r: T) => {
 
 const norm = (s: string) => s.toLowerCase().replace(/\s+/g, '');
 
+// 에디터가 고른 항목을 앞에 세우고, 리뷰 집계 개수는 그대로 붙임
+const mergeKeys = (counted: { key: string; count: number }[], picked: string[]) => {
+  const counts = new Map(counted.map((h) => [h.key, h.count]));
+  return [
+    ...picked.map((key) => ({ key, count: counts.get(key) ?? 0, editor: true })),
+    ...counted.filter((h) => !picked.includes(h.key))
+  ];
+};
+
 // 리뷰 집계 결과(profile/highlights/koreanStats)에 에디터 분류를 덮어씌움
 export const applyEditor = (o: any) => {
   const e = o.editor;
-  const cs = o.koreanStats;
-  o.situations = {
-    goodForFamily: !!e?.situations.includes('goodForFamily') || cs.goodForFamilyCount > 0,
-    noDiscrimination: !!e?.situations.includes('noDiscrimination') || cs.noDiscriminationCount > 0,
-    authenticKorean: e?.authenticity === 'korean' || cs.authenticKoreanCount > 0,
-    koreanFriendly: !!e?.situations.includes('koreanFriendly') || cs.koreanFriendlyCount > 0
-  };
+  o.noDiscrimination = !!e?.situations.includes('noDiscrimination') || o.koreanStats.noDiscriminationCount > 0;
   if (!e) return o;
 
-  for (const k of ['authenticity', 'priceValue', 'crowd'] as const) {
+  for (const k of ['authenticity', 'palateFit', 'priceValue', 'crowd'] as const) {
     if (e[k]) o.profile[k] = { ...o.profile[k], top: e[k], editor: true };
   }
 
-  const kwCounts = new Map<string, number>(o.highlights.keywords.map((h: any) => [h.key, h.count]));
-  o.highlights.keywords = [
-    ...e.keywords.map((key: string) => ({ key, count: kwCounts.get(key) ?? 0, editor: true })),
-    ...o.highlights.keywords.filter((h: any) => !e.keywords.includes(h.key))
-  ];
+  o.highlights.keywords = mergeKeys(o.highlights.keywords, e.keywords);
+  o.highlights.palate = mergeKeys(o.highlights.palate, e.palate);
+  o.highlights.situations = mergeKeys(o.highlights.situations, e.situations.filter((s: string) => s !== 'noDiscrimination'));
 
   const menuCounts = new Map<string, number>(o.highlights.menus.map((m: any) => [norm(m.name), m.count]));
   const editorMenuKeys = new Set(e.menus.map(norm));
@@ -59,5 +63,6 @@ export const applyEditor = (o: any) => {
     ...e.menus.map((name: string) => ({ name, count: menuCounts.get(norm(name)) ?? 0, editor: true })),
     ...o.highlights.menus.filter((m: any) => !editorMenuKeys.has(norm(m.name)))
   ];
+  if (e.orderTip) o.highlights.orderTips = [e.orderTip, ...o.highlights.orderTips];
   return o;
 };

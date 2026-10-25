@@ -4,7 +4,9 @@ import { Restaurant } from '../types';
 import { restaurantService } from '../services/restaurant.service';
 import { authService } from '../services/auth.service';
 import { reviewService } from '../services/review.service';
-import { findKeyword, findOption, findTip, getCuisineStyle, KOREAN_TAGS, PROFILE, PROFILE_KEYS } from '../utils/cuisine';
+import {
+  findKeyword, findOption, findPalate, findSituation, findTip, getCuisineStyle, NO_DISCRIMINATION, PROFILE_KEYS, profileFor,
+} from '../utils/cuisine';
 
 const stars = (n: number) => '★'.repeat(Math.round(n)) + '☆'.repeat(5 - Math.round(n));
 
@@ -78,6 +80,18 @@ function RestaurantDetailPage() {
 
   const style = getCuisineStyle(r.cuisineType);
   const total = r.koreanStats.totalReviews;
+  const pctOf = (n: number) => (total ? Math.round((n / total) * 100) : 0);
+  // 점수 옆 막대: 차별 없음 + 리뷰에서 많이 꼽힌 "누구랑" 상위 3개
+  const bars = [
+    { key: 'noDiscrimination', emoji: NO_DISCRIMINATION.emoji, label: NO_DISCRIMINATION.label, pct: pctOf(r.koreanStats.noDiscriminationCount) },
+    ...r.highlights.situations
+      .filter((h) => h.count > 0)
+      .slice(0, 3)
+      .map((h) => ({ key: h.key, emoji: findSituation(h.key)?.emoji, label: findSituation(h.key)?.label, pct: pctOf(h.count) })),
+  ];
+  const hasHighlights =
+    r.highlights.keywords.length > 0 || r.highlights.menus.length > 0 || r.highlights.palate.length > 0 ||
+    r.highlights.situations.length > 0 || r.highlights.orderTips.length > 0;
 
   return (
     <div>
@@ -138,20 +152,17 @@ function RestaurantDetailPage() {
             <small>한인 리뷰 {r.reviewCount}개</small>
           </div>
           <div className="score-bars">
-            {KOREAN_TAGS.filter((t) => t.param !== 'authenticKorean').map((t) => {
-              const pct = total ? Math.round(((r.koreanStats as any)[t.statKey] / total) * 100) : 0;
-              return (
-                <div key={t.param} className="bar-row">
-                  <span className="bar-label">
-                    {t.emoji} {t.label}
-                  </span>
-                  <div className="bar">
-                    <div className="bar-fill" style={{ width: `${pct}%` }} />
-                  </div>
-                  <span className="bar-pct">{pct}%</span>
+            {bars.map((b) => (
+              <div key={b.key} className="bar-row">
+                <span className="bar-label">
+                  {b.emoji} {b.label}
+                </span>
+                <div className="bar">
+                  <div className="bar-fill" style={{ width: `${b.pct}%` }} />
                 </div>
-              );
-            })}
+                <span className="bar-pct">{b.pct}%</span>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -218,26 +229,27 @@ function RestaurantDetailPage() {
           </h3>
           {PROFILE_KEYS.map((k) => {
             const d = r.profile[k];
-            if (k === 'authenticity' && !['한식', '퓨전'].includes(r.cuisineType)) return null;
+            const def = profileFor(k, r.cuisineType);
+            const pick = findOption(k, d.top, r.cuisineType);
             return (
               <div key={k} className="profile-row">
-                <div className="profile-title">{PROFILE[k].title}</div>
-                {d.editor && findOption(k, d.top) && (
+                <div className="profile-title">{def.title}</div>
+                {d.editor && pick && (
                   <div className="editor-pick">
-                    ✍️ 찐 에디터 선정 · {findOption(k, d.top)!.emoji} {findOption(k, d.top)!.label}
+                    ✍️ 찐 에디터 선정 · {pick.emoji} {pick.label}
                   </div>
                 )}
                 {d.total ? (
                   <>
                     <div className="seg-bar">
-                      {PROFILE[k].options.map((o, i) =>
+                      {def.options.map((o, i) =>
                         d.counts[o.value] ? (
                           <div key={o.value} className={`seg seg-${i}`} style={{ flex: d.counts[o.value] }} />
                         ) : null
                       )}
                     </div>
                     <div className="seg-legend">
-                      {PROFILE[k].options.map((o, i) => (
+                      {def.options.map((o, i) => (
                         <span key={o.value} className={d.top === o.value ? 'top' : ''}>
                           <i className={`dot seg-${i}`} />
                           {o.emoji} {o.short} {Math.round((d.counts[o.value] / d.total) * 100)}%
@@ -253,8 +265,48 @@ function RestaurantDetailPage() {
           })}
         </div>
 
-        {(r.highlights.keywords.length > 0 || r.highlights.menus.length > 0) && (
+        {hasHighlights && (
           <div className="profile-box">
+            {r.highlights.palate.length > 0 && (
+              <div className="profile-row">
+                <div className="profile-title">😋 한국인 입맛 포인트</div>
+                <div className="r-card-badges">
+                  {r.highlights.palate.map((h) => {
+                    const info = findPalate(h.key);
+                    return info ? (
+                      <span key={h.key} className="badge palate">
+                        {info.emoji} {info.label} {h.count > 0 && <b>{h.count}</b>}
+                      </span>
+                    ) : null;
+                  })}
+                </div>
+              </div>
+            )}
+            {r.highlights.orderTips.length > 0 && (
+              <div className="profile-row">
+                <div className="profile-title">💡 이렇게 주문하세요</div>
+                <ul className="order-tips">
+                  {r.highlights.orderTips.map((t, i) => (
+                    <li key={i}>{t}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {r.highlights.situations.length > 0 && (
+              <div className="profile-row">
+                <div className="profile-title">누구랑 가기 좋아요</div>
+                <div className="r-card-badges">
+                  {r.highlights.situations.map((h) => {
+                    const info = findSituation(h.key);
+                    return info ? (
+                      <span key={h.key} className="badge">
+                        {info.emoji} {info.label} {h.count > 0 && <b>{h.count}</b>}
+                      </span>
+                    ) : null;
+                  })}
+                </div>
+              </div>
+            )}
             {r.highlights.menus.length > 0 && (
               <div className="profile-row">
                 <div className="profile-title">🍽️ 이거 시켜 드세요 (한인 추천 메뉴)</div>
@@ -323,9 +375,10 @@ function RestaurantDetailPage() {
             </div>
             <p>{rv.content}</p>
             {!!rv.menus?.length && <div className="r-muted small" style={{ marginBottom: 8 }}>🍽️ 추천: {rv.menus.join(', ')}</div>}
+            {rv.orderTip && <div className="r-muted small" style={{ marginBottom: 8 }}>💡 주문 팁: {rv.orderTip}</div>}
             <div className="r-card-badges">
               {PROFILE_KEYS.map((k) => {
-                const o = findOption(k, (rv as any)[k]);
+                const o = findOption(k, rv[k], r.cuisineType);
                 return o ? (
                   <span key={k} className="badge profile">
                     {o.emoji} {o.short}
@@ -345,11 +398,27 @@ function RestaurantDetailPage() {
                   </span>
                 ) : null;
               })}
-              {KOREAN_TAGS.filter((t) => t.param !== 'authenticKorean' && (rv as any)[t.param]).map((t) => (
-                <span key={t.param} className="badge">
-                  {t.emoji} {t.label}
+              {rv.palate?.map((key) => {
+                const info = findPalate(key);
+                return info ? (
+                  <span key={key} className="badge palate">
+                    {info.emoji} {info.label}
+                  </span>
+                ) : null;
+              })}
+              {rv.situations?.map((key) => {
+                const info = findSituation(key);
+                return info ? (
+                  <span key={key} className="badge">
+                    {info.emoji} {info.label}
+                  </span>
+                ) : null;
+              })}
+              {rv.noDiscrimination && (
+                <span className="badge">
+                  {NO_DISCRIMINATION.emoji} {NO_DISCRIMINATION.label}
                 </span>
-              ))}
+              )}
             </div>
             <button className={`helpful ${rv.helpedByMe ? 'on' : ''}`} onClick={() => onHelpful(rv.id)}>
               👍 도움이 됐어요 {rv.isHelpful > 0 && rv.isHelpful}

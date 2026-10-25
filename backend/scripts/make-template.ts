@@ -6,7 +6,8 @@ import { tipResearch } from '../prisma/data/tip-research';
 
 const HEADER = [
   '식당명(영문)', '한글명', '음식 종류', '주소', '가격대(1-4)', '전화', '영업상태',
-  '맛 스타일', '가성비', '손님층', '팁', '상황', '키워드', '추천 메뉴', '한줄평', '위도', '경도'
+  '본토 느낌', '한국인 입맛', '입맛 포인트', '가성비', '손님층', '팁', '상황', '키워드', '추천 메뉴', '주문 팁',
+  '한줄평', '위도', '경도'
 ];
 const esc = (v: unknown) => {
   const s = v === undefined || v === null ? '' : String(v);
@@ -16,7 +17,7 @@ const esc = (v: unknown) => {
 const closed = new Set(tipResearch.filter((t) => t.businessStatus === 'closed').map((t) => t.name));
 const rows = realRestaurants.map((r) => [
   r.name, r.nameKorean, r.cuisine, r.address, r.price, r.phone ?? '', closed.has(r.name) ? '폐업' : '',
-  '', '', '', '', '', '', '', '', r.lat, r.lng
+  '', '', '', '', '', '', '', '', '', '', '', r.lat, r.lng
 ]);
 
 const csv = '﻿' + [HEADER, ...rows].map((row) => row.map(esc).join(',')).join('\r\n') + '\r\n';

@@ -1,23 +1,28 @@
 import { Link } from 'react-router-dom';
-import { Restaurant } from '../types';
-import { findKeyword, findOption, getCuisineStyle, KOREAN_TAGS, PROFILE_KEYS } from '../utils/cuisine';
+import { KeyCount, Restaurant } from '../types';
+import { findKeyword, findOption, findPalate, findSituation, getCuisineStyle, PROFILE_KEYS } from '../utils/cuisine';
 
 function RestaurantCard({ restaurant: r }: { restaurant: Restaurant }) {
   const style = getCuisineStyle(r.cuisineType);
   const total = r.koreanStats?.totalReviews || 0;
+  // 에디터가 골랐거나 리뷰 절반 이상이 고른 항목만 카드에 노출
+  const strong = (h: KeyCount) => h.editor || (total > 0 && h.count / total >= 0.5);
 
   const profileBadges = PROFILE_KEYS.map((k) => {
     const d = r.profile?.[k];
     if (!d?.top) return null;
     if (!d.editor && (d.total < 1 || d.counts[d.top] / d.total < 0.5)) return null;
-    const o = findOption(k, d.top);
+    const o = findOption(k, d.top, r.cuisineType);
     return o ? { key: k, text: `${o.emoji} ${o.short}`, pct: d.total ? Math.round((d.counts[d.top] / d.total) * 100) : 100 } : null;
   }).filter(Boolean) as { key: string; text: string; pct: number }[];
 
-  const situationBadges = KOREAN_TAGS.filter((t) => t.param !== 'authenticKorean')
-    .map((t) => ({ ...t, pct: total ? Math.round(((r.koreanStats as any)[t.statKey] / total) * 100) : 0 }))
-    .filter((t) => t.pct >= 60 || !!r.editor?.situations.includes(t.param))
-    .slice(0, Math.max(0, 4 - profileBadges.length));
+  const room = Math.max(0, 4 - profileBadges.length);
+  const palateBadges = (r.highlights?.palate ?? []).filter(strong).map((h) => findPalate(h.key)).filter(Boolean).slice(0, 1);
+  const situationBadges = (r.highlights?.situations ?? [])
+    .filter(strong)
+    .map((h) => findSituation(h.key))
+    .filter(Boolean)
+    .slice(0, Math.max(0, room - palateBadges.length));
 
   return (
     <Link to={`/restaurant/${r.id}`} className="r-card">
@@ -56,9 +61,14 @@ function RestaurantCard({ restaurant: r }: { restaurant: Restaurant }) {
               {b.text}
             </span>
           ))}
+          {palateBadges.map((b) => (
+            <span key={b!.key} className="badge palate">
+              {b!.emoji} {b!.label}
+            </span>
+          ))}
           {situationBadges.map((b) => (
-            <span key={b.param} className="badge">
-              {b.emoji} {b.label}
+            <span key={b!.key} className="badge">
+              {b!.emoji} {b!.label}
             </span>
           ))}
           {r.highlights?.keywords.slice(0, 2).map((k) => {
