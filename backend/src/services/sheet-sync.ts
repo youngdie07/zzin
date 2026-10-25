@@ -41,7 +41,7 @@ const COLUMNS: Record<string, string> = {
   '전화': 'phone', '영업상태': 'status', '본토느낌': 'authenticity', '맛스타일': 'authenticity',
   '한국인입맛': 'palateFit', '입맛포인트': 'palate', '가성비': 'priceValue', '손님층': 'crowd',
   '팁': 'tip', '상황': 'situations', '누구랑': 'situations', '키워드': 'keywords', '추천메뉴': 'menus',
-  '주문팁': 'orderTip', '한줄평': 'note',
+  '주문팁': 'orderTip', '한줄평': 'note', 'AI메모': 'aiNote', '검증완료': 'verified',
   '위도': 'lat', '경도': 'lng'
 };
 
@@ -120,6 +120,9 @@ export async function syncSheet(prisma: PrismaClient, csv: string): Promise<Sync
       editorMenus: JSON.stringify(splitMulti(cell.menus ?? '').slice(0, 8).map((m) => m.slice(0, 30))),
       editorOrderTip: cell.orderTip ? cell.orderTip.slice(0, 120) : null,
       editorNote: cell.note || null,
+      // AI 메모가 있고 '검증완료' 체크 전이면 AI 추정값으로 표시
+      editorSource: cell.aiNote && cell.verified?.toUpperCase() !== 'TRUE' ? 'ai' : 'editor',
+      editorAiNote: cell.aiNote || null,
       // 가격대·세부 종류도 시트가 기준: 비우면 지움
       priceBand: /^\d$/.test(cell.price ?? '') ? null : single('price', 'priceBand'),
       subCuisine: single('subCuisine', 'subCuisine')

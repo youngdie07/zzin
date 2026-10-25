@@ -43,6 +43,8 @@ export interface Restaurant {
     menus: string[];
     orderTip: string | null;
     note: string | null;
+    source: 'editor' | 'ai';
+    aiNote: string | null;
     updatedAt: string | null;
   } | null;
   businessStatus?: string;

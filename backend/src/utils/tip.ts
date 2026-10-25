@@ -40,8 +40,9 @@ export const buildTip = (restaurant: any, reviews: any[]) => {
 
   if (isTipPolicy(restaurant.editorTip)) {
     policy = restaurant.editorTip;
-    source = 'editor';
-    confidence = 1;
+    // AI가 시트에 채운 값은 검증 전까지 AI 출처로 표시 (신뢰도 없음)
+    source = restaurant.editorSource === 'ai' ? 'ai' : 'editor';
+    confidence = source === 'ai' ? null : 1;
   } else if (top && total >= MIN_USER_REPORTS && counts[top] / total >= MIN_USER_SHARE) {
     policy = top;
     source = 'users';

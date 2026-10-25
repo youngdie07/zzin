@@ -81,6 +81,7 @@ function RestaurantDetailPage() {
 
   const style = getCuisineStyle(r.cuisineType);
   const total = r.koreanStats.totalReviews;
+  const aiPicked = r.editor?.source === 'ai';
   const pctOf = (n: number) => (total ? Math.round((n / total) * 100) : 0);
   // 점수 옆 막대: 차별 없음 + 리뷰에서 많이 꼽힌 "누구랑" 상위 3개
   const bars = [
@@ -121,6 +122,13 @@ function RestaurantDetailPage() {
         {r.editor?.note && (
           <div className="editor-note">
             ✍️ <b>에디터 한줄평</b> {r.editor.note}
+          </div>
+        )}
+
+        {aiPicked && (
+          <div className="notice ai">
+            🤖 이 식당의 분류는 AI가 웹 후기를 보고 추정했어요. 다녀오셨다면 리뷰로 바로잡아 주세요.
+            {r.editor?.aiNote && <div className="r-muted small">근거: {r.editor.aiNote}</div>}
           </div>
         )}
 
@@ -187,7 +195,11 @@ function RestaurantDetailPage() {
                   )}
                   {t.source === 'editor' && <span className="badge tip">찐 에디터 확인</span>}
                   {t.source === 'users' && <span className="badge">한인 리뷰 {t.userReports.total}명 기준</span>}
-                  {t.source === 'ai' && <span className="badge profile">AI 웹 조사 · 신뢰도 {Math.round((t.confidence ?? 0) * 100)}%</span>}
+                  {t.source === 'ai' && (
+                    <span className="badge profile">
+                      {t.confidence === null ? 'AI 추정' : `AI 웹 조사 · 신뢰도 ${Math.round(t.confidence * 100)}%`}
+                    </span>
+                  )}
                 </div>
                 {t.userReports.total > 0 && t.source !== 'users' && (
                   <div className="r-muted small" style={{ marginTop: 6 }}>
@@ -237,8 +249,8 @@ function RestaurantDetailPage() {
               <div key={k} className="profile-row">
                 <div className="profile-title">{def.title}</div>
                 {d.editor && pick && (
-                  <div className="editor-pick">
-                    ✍️ 찐 에디터 선정 · {pick.emoji} {pick.label}
+                  <div className={`editor-pick ${aiPicked ? 'ai' : ''}`}>
+                    {aiPicked ? '🤖 AI 추정' : '✍️ 찐 에디터 선정'} · {pick.emoji} {pick.label}
                   </div>
                 )}
                 {d.total ? (

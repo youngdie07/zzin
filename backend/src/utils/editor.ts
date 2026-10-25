@@ -2,7 +2,7 @@ import { parseList } from './profile';
 
 const EDITOR_FIELDS = [
   'editorAuthenticity', 'editorPalateFit', 'editorPalate', 'editorPriceValue', 'editorCrowd', 'editorTip',
-  'editorSituations', 'editorKeywords', 'editorMenus', 'editorOrderTip', 'editorNote', 'editorUpdatedAt'
+  'editorSituations', 'editorKeywords', 'editorMenus', 'editorOrderTip', 'editorNote', 'editorSource', 'editorAiNote', 'editorUpdatedAt'
 ] as const;
 
 export const buildEditor = (r: any) => {
@@ -18,6 +18,9 @@ export const buildEditor = (r: any) => {
     menus: parseList(r.editorMenus),
     orderTip: r.editorOrderTip ?? null,
     note: r.editorNote ?? null,
+    // ai 면 시트에서 AI가 채우고 아직 '검증완료' 체크 전인 값
+    source: (r.editorSource === 'ai' ? 'ai' : 'editor') as 'ai' | 'editor',
+    aiNote: r.editorAiNote ?? null,
     updatedAt: r.editorUpdatedAt ?? null
   };
   const hasAny =

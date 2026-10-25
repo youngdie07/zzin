@@ -196,3 +196,6 @@ textarea.input { resize: vertical; }
 .order-tips { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; color: var(--text-medium); font-size: 14px; line-height: 1.5; }
 
 .sub-row { padding-top: 8px; }
+.editor-pick.ai { background: #eef3ff; color: #3f5fc4; }
+.notice.ai { background: #eef3ff; color: #2f4a9e; border-radius: 12px; padding: 12px 14px; margin: 8px 0 12px; font-size: 14px; line-height: 1.5; }
+.notice.ai .small { margin-top: 4px; }

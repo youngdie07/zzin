@@ -66,6 +66,8 @@ model Restaurant {
   editorMenus        String?  // JSON 배열
   editorOrderTip     String?  // 에디터 주문 팁
   editorNote         String?  // 에디터 한줄평
+  editorSource       String?  // editor | ai (AI가 채우고 아직 검증 안 함)
+  editorAiNote       String?  // AI 판단 근거
   editorUpdatedAt    DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
