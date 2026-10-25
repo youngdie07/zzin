@@ -6,7 +6,8 @@ export const restaurantService = {
   async getRestaurants(params?: Record<string, unknown> | {
     search?: string;
     cuisineType?: string;
-    priceRange?: number;
+    priceBand?: string;
+    subCuisine?: string;
     minRating?: number;
     tags?: string[];
     latitude?: number;
@@ -36,7 +37,8 @@ export const restaurantService = {
     longitude: number;
     phoneNumber?: string;
     cuisineType: string;
-    priceRange?: number;
+    priceBand?: string;
+    subCuisine?: string;
     website?: string;
     hours?: any;
     images?: string[];

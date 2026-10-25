@@ -6,6 +6,9 @@ import { applyResearch } from './apply-research';
 
 const prisma = new PrismaClient();
 
+// 데이터 파일의 1~4 단계 추정값 -> 1인 가격대
+const PRICE_BANDS: Record<number, string> = { 1: '10_20', 2: '20_30', 3: '30_50', 4: '50_100' };
+
 // 플래그: f=가족 모임, d=차별 없음, a=본토 맛 그대로, k=한국인 입맛에 맞음
 type Rev = [user: number, rating: number, flags: string, text: string];
 
@@ -17,6 +20,7 @@ interface Seed {
   lng: number;
   cuisine: string;
   price: number;
+  sub?: string;
   description: string;
   phone?: string;
   reviews: Rev[];
@@ -206,7 +210,8 @@ async function main() {
         longitude: r.lng,
         phoneNumber: r.phone ?? null,
         cuisineType: r.cuisine,
-        priceRange: r.price,
+        priceBand: PRICE_BANDS[r.price],
+        subCuisine: r.sub ?? null,
         description: r.description,
         images: '[]'
       }

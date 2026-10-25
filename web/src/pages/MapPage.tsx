@@ -5,7 +5,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Restaurant } from '../types';
 import { restaurantService } from '../services/restaurant.service';
-import { CUISINES, getCuisineStyle } from '../utils/cuisine';
+import { CUISINES, getCuisineStyle, cuisineLabel, priceLabel } from '../utils/cuisine';
 
 const AUSTIN: [number, number] = [30.2672, -97.7431];
 
@@ -116,7 +116,8 @@ function MapPage() {
                   <div className="map-popup">
                     <strong>{r.nameKorean || r.name}</strong>
                     <div>
-                      {r.cuisineType} · {'$'.repeat(r.priceRange)} · ★ {r.reviewCount ? r.avgRating.toFixed(1) : '-'}
+                      {cuisineLabel(r)}
+                      {priceLabel(r.priceBand) && ` · ${priceLabel(r.priceBand)}`} · ★ {r.reviewCount ? r.avgRating.toFixed(1) : '-'}
                     </div>
                     {r.tip?.noTipNeeded && <div>💵 {r.tip.policy === 'included' ? '팁 포함' : '팁 안 받아요'}</div>}
                     <Link to={`/restaurant/${r.id}`}>자세히 보기 →</Link>
@@ -149,7 +150,7 @@ function MapPage() {
               <span className="map-item-body">
                 <strong>{r.nameKorean || r.name}</strong>
                 <span className="r-muted">
-                  {r.cuisineType} · ★ {r.reviewCount ? r.avgRating.toFixed(1) : '-'}
+                  {cuisineLabel(r)} · ★ {r.reviewCount ? r.avgRating.toFixed(1) : '-'}
                   {dist !== null && ` · ${dist < 0.1 ? '바로 근처' : `${dist.toFixed(1)} mi`}`}
                 </span>
               </span>

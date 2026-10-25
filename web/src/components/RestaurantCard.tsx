@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import { KeyCount, Restaurant } from '../types';
-import { findKeyword, findOption, findPalate, findSituation, getCuisineStyle, PROFILE_KEYS } from '../utils/cuisine';
+import {
+  cuisineLabel, findKeyword, findOption, findPalate, findSituation, getCuisineStyle, priceLabel, PROFILE_KEYS,
+} from '../utils/cuisine';
 
 function RestaurantCard({ restaurant: r }: { restaurant: Restaurant }) {
   const style = getCuisineStyle(r.cuisineType);
@@ -35,12 +37,12 @@ function RestaurantCard({ restaurant: r }: { restaurant: Restaurant }) {
         }}
       >
         {!r.images?.[0] && <span className="r-card-emoji">{style.emoji}</span>}
-        <span className="r-card-cuisine">{r.cuisineType}</span>
+        <span className="r-card-cuisine">{cuisineLabel(r)}</span>
       </div>
       <div className="r-card-body">
         <div className="r-card-title">
           <h3>{r.nameKorean || r.name}</h3>
-          <span className="r-card-price">{'$'.repeat(r.priceRange)}</span>
+          {priceLabel(r.priceBand) && <span className="r-card-price">{priceLabel(r.priceBand)}</span>}
         </div>
         {r.nameKorean && <p className="r-card-sub">{r.name}</p>}
         <div className="r-card-rating">

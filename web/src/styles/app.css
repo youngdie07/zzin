@@ -194,3 +194,5 @@ textarea.input { resize: vertical; }
 .badge.palate { background: #fff4e5; color: #c25e00; }
 .badge.palate b { margin-left: 4px; opacity: .7; }
 .order-tips { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; color: var(--text-medium); font-size: 14px; line-height: 1.5; }
+
+.sub-row { padding-top: 8px; }

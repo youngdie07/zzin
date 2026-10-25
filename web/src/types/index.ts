@@ -18,7 +18,8 @@ export interface Restaurant {
   longitude: number;
   phoneNumber?: string;
   cuisineType: string;
-  priceRange: number;
+  subCuisine?: string | null;
+  priceBand?: string | null;
   website?: string;
   hours?: any;
   images: string[];

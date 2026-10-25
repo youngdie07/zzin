@@ -22,7 +22,17 @@ export const LABELS = {
     '웨이팅 적음': 'no_wait', '웨이팅 김': 'waiting', '소주·술 OK': 'drinks', '예약 필수': 'reservation',
     '깔끔·청결': 'clean', '직원 친절': 'kind', '늦게까지 영업': 'late', '포장 편함': 'takeout'
   },
-  status: { 영업중: 'open', 폐업: 'closed' }
+  status: { 영업중: 'open', 폐업: 'closed' },
+  // 1인 기준 가격대 (구글맵 표기와 같은 구간)
+  priceBand: {
+    '$10 미만': 'u10', '$10–20': '10_20', '$20–30': '20_30', '$30–50': '30_50', '$50–100': '50_100', '$100 이상': '100p',
+    '$10-20': '10_20', '$20-30': '20_30', '$30-50': '30_50', '$50-100': '50_100'
+  },
+  // 한식 세부 종류
+  subCuisine: {
+    '종합 한식': 'general', 고기구이: 'bbq', '순두부·찌개': 'tofu', '국밥·탕': 'soup', 치킨: 'chicken', 분식: 'bunsik',
+    '포차·술집': 'pocha', '반찬·도시락': 'banchan', 퓨전: 'fusion'
+  }
 } as const;
 
 export type LabelGroup = keyof typeof LABELS;

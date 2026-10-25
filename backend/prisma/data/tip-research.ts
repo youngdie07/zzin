@@ -20,30 +20,6 @@ const NONE = (name: string): TipResearch => ({
 
 export const tipResearch: TipResearch[] = [
   {
-    name: 'Jjim BBQ',
-    tipPolicy: 'no_tip',
-    confidence: 0.8,
-    businessStatus: 'closed',
-    checkedAt: CHECKED,
-    evidence: [
-      {
-        source: 'Austin Food Magazine',
-        url: 'https://austinfoodmagazine.com/jjim-bbq/amp/',
-        summary: '직원에게 공정한 임금을 주기 위해 엄격한 노팁 정책을 운영한다고 소개.',
-      },
-      {
-        source: 'Community Impact (2020)',
-        url: 'https://communityimpact.com/central-austin/impacts/new-korean-spot-jjim-bbq-to-open-in-lamar-union-this-fall/',
-        summary: '자매 식당 Tso Chinese Delivery의 노팁 방침을 이 식당에도 적용한다고 오너가 밝힘.',
-      },
-      {
-        source: 'Yelp',
-        url: 'https://www.yelp.com/biz/jjim-korean-braised-bbq-austin',
-        summary: '2026년 4월 기준 폐업(CLOSED)으로 표시됨. 폐업이라 목록에서 숨김.',
-      },
-    ],
-  },
-  {
     name: 'KPOT Korean BBQ & Hot Pot',
     tipPolicy: 'standard',
     confidence: 0.4,
@@ -70,7 +46,7 @@ export const tipResearch: TipResearch[] = [
     ],
   },
   ...[
-    'Chosun Galbi', 'Charm Korean BBQ', 'Chodang Tofu & BBQ', 'SoGongDong Tofu House', 'Honey Pig BBQ',
+    'Chodang Tofu & BBQ', 'SoGongDong Tofu House', 'Honey Pig BBQ',
     'Gangnam Korean BBQ', 'Manna Korean Restaurant', 'Oseyo', 'SOHA Korean Restaurant', 'K-Bop',
     "Chi'Lantro (Domain/Burnet)", "Chi'Lantro (Downtown)", 'Korean Grill', 'An Nyeong K Tofu & BBQ',
     'Seoulju Korean Kitchen & Bar', "Mom's Taste", 'Gen Korean BBQ House', 'Gen Korean BBQ House (Pflugerville)',

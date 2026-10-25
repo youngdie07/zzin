@@ -5,7 +5,8 @@ import { restaurantService } from '../services/restaurant.service';
 import { authService } from '../services/auth.service';
 import { reviewService } from '../services/review.service';
 import {
-  findKeyword, findOption, findPalate, findSituation, findTip, getCuisineStyle, NO_DISCRIMINATION, PROFILE_KEYS, profileFor,
+  cuisineLabel, findKeyword, findOption, findPalate, findSituation, findTip, getCuisineStyle, NO_DISCRIMINATION, PROFILE_KEYS,
+  priceLabel, profileFor,
 } from '../utils/cuisine';
 
 const stars = (n: number) => '★'.repeat(Math.round(n)) + '☆'.repeat(5 - Math.round(n));
@@ -108,7 +109,8 @@ function RestaurantDetailPage() {
           <div>
             <h2>{r.nameKorean || r.name}</h2>
             <p className="r-muted">
-              {r.name} · {r.cuisineType} · {'$'.repeat(r.priceRange)}
+              {r.name} · {cuisineLabel(r)}
+              {priceLabel(r.priceBand) && ` · 1인 ${priceLabel(r.priceBand)}`}
             </p>
           </div>
           <button className={`btn-bookmark ${bookmarked ? 'on' : ''}`} onClick={onBookmark}>

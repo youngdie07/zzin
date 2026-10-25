@@ -38,7 +38,7 @@ const summarize = (reviews: any[]) => {
 // 음식점 목록 조회 (검색, 필터링, 정렬)
 export const getRestaurants = async (req: Request, res: Response) => {
   try {
-    const { search, cuisineType, priceRange, sort = 'rating', page = 1, limit = 20 } = req.query;
+    const { search, cuisineType, subCuisine, priceBand, sort = 'rating', page = 1, limit = 20 } = req.query;
 
     const where: any = {};
 
@@ -52,7 +52,8 @@ export const getRestaurants = async (req: Request, res: Response) => {
     }
     if (cuisineType) where.cuisineType = cuisineType;
     if (req.query.includeClosed !== 'true') where.businessStatus = { not: 'closed' };
-    if (priceRange) where.priceRange = parseInt(priceRange as string);
+    if (subCuisine) where.subCuisine = subCuisine;
+    if (priceBand) where.priceBand = priceBand;
 
     const rows = await prisma.restaurant.findMany({
       where,
@@ -161,7 +162,7 @@ export const createRestaurant = async (req: AuthRequest, res: Response) => {
   try {
     const {
       name, nameKorean, address, latitude, longitude, phoneNumber,
-      cuisineType, priceRange, website, hours, images, description
+      cuisineType, subCuisine, priceBand, website, hours, images, description
     } = req.body;
 
     const restaurant = await prisma.restaurant.create({
@@ -173,7 +174,8 @@ export const createRestaurant = async (req: AuthRequest, res: Response) => {
         longitude: parseFloat(longitude),
         phoneNumber,
         cuisineType,
-        priceRange: priceRange ? parseInt(priceRange) : 2,
+        subCuisine: subCuisine || null,
+        priceBand: priceBand || null,
         website,
         hours,
         images: serializeImages(images),

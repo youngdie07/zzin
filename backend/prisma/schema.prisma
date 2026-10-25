@@ -38,7 +38,8 @@ model Restaurant {
   longitude       Float
   phoneNumber     String?
   cuisineType     String    // 음식 종류 (한식, 중식, 일식, 양식 등)
-  priceRange      Int       @default(2) // 1-4 ($ - $$$$)
+  subCuisine      String?   // 세부 종류 (한식: bbq, tofu, chicken, pocha 등)
+  priceBand       String?   // 1인 가격대: u10 | 10_20 | 20_30 | 30_50 | 50_100 | 100p
   googlePlaceId   String?   @unique // Google Maps 연동
   website         String?
   hours           Json?     // 영업시간

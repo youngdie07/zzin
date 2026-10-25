@@ -37,7 +37,7 @@ export function parseCsv(input: string): string[][] {
 }
 
 const COLUMNS: Record<string, string> = {
-  '식당명': 'name', '한글명': 'nameKorean', '음식종류': 'cuisine', '주소': 'address', '가격대': 'price',
+  '식당명': 'name', '한글명': 'nameKorean', '음식종류': 'cuisine', '세부종류': 'subCuisine', '주소': 'address', '가격대': 'price',
   '전화': 'phone', '영업상태': 'status', '본토느낌': 'authenticity', '맛스타일': 'authenticity',
   '한국인입맛': 'palateFit', '입맛포인트': 'palate', '가성비': 'priceValue', '손님층': 'crowd',
   '팁': 'tip', '상황': 'situations', '누구랑': 'situations', '키워드': 'keywords', '추천메뉴': 'menus',
@@ -50,7 +50,7 @@ const headerKey = (h: string) => COLUMNS[h.replace(/\(.*?\)/g, '').replace(/\s+/
 
 // 오류 메시지에 쓸 칸 이름
 const COLUMN_NAMES: Record<string, string> = {
-  status: '영업상태', authenticity: '본토 느낌', palateFit: '한국인 입맛', palate: '입맛 포인트', priceValue: '가성비',
+  status: '영업상태', price: '가격대', subCuisine: '세부 종류', authenticity: '본토 느낌', palateFit: '한국인 입맛', palate: '입맛 포인트', priceValue: '가성비',
   crowd: '손님층', tip: '팁', situations: '상황', keywords: '키워드'
 };
 
@@ -119,19 +119,22 @@ export async function syncSheet(prisma: PrismaClient, csv: string): Promise<Sync
       editorKeywords: JSON.stringify(multi('keywords', 'keywords')),
       editorMenus: JSON.stringify(splitMulti(cell.menus ?? '').slice(0, 8).map((m) => m.slice(0, 30))),
       editorOrderTip: cell.orderTip ? cell.orderTip.slice(0, 120) : null,
-      editorNote: cell.note || null
+      editorNote: cell.note || null,
+      // 가격대·세부 종류도 시트가 기준: 비우면 지움
+      priceBand: /^\d$/.test(cell.price ?? '') ? null : single('price', 'priceBand'),
+      subCuisine: single('subCuisine', 'subCuisine')
     };
+    if (/^\d$/.test(cell.price ?? ''))
+      result.errors.push(`${label}: 가격대는 이제 '$10–20' 처럼 1인 기준 구간으로 적어주세요. (예전 1~4 단계는 무시했어요)`);
     const status = cell.status ? toValue('status', cell.status) : null;
     if (cell.status && !status) result.errors.push(`${label}: '${cell.status}' 는 영업상태 칸에 쓸 수 없는 값이에요. (영업중 / 폐업)`);
 
     const existing = await prisma.restaurant.findFirst({ where: { name: cell.name } });
-    const price = cell.price ? Math.min(4, Math.max(1, parseInt(cell.price, 10) || 2)) : undefined;
     const basics = {
       ...(cell.nameKorean ? { nameKorean: cell.nameKorean } : {}),
       ...(cell.cuisine ? { cuisineType: cell.cuisine } : {}),
       ...(cell.address ? { address: cell.address } : {}),
       ...(cell.phone ? { phoneNumber: cell.phone } : {}),
-      ...(price ? { priceRange: price } : {}),
       ...(cell.lat && !isNaN(+cell.lat) ? { latitude: +cell.lat } : {}),
       ...(cell.lng && !isNaN(+cell.lng) ? { longitude: +cell.lng } : {}),
       ...(status ? { businessStatus: status } : {})

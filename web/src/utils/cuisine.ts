@@ -21,6 +21,37 @@ export const getCuisineStyle = (cuisine: string) =>
 
 export const CUISINES = ['전체', ...Object.keys(styles)];
 
+// 한식 세부 종류
+export const KOREAN_SUBS = [
+  { key: 'general', emoji: '🍚', label: '종합 한식' },
+  { key: 'bbq', emoji: '🥩', label: '고기구이' },
+  { key: 'tofu', emoji: '🍲', label: '순두부·찌개' },
+  { key: 'soup', emoji: '🥘', label: '국밥·탕' },
+  { key: 'chicken', emoji: '🍗', label: '치킨' },
+  { key: 'bunsik', emoji: '🍜', label: '분식' },
+  { key: 'pocha', emoji: '🍶', label: '포차·술집' },
+  { key: 'banchan', emoji: '🥡', label: '반찬·도시락' },
+  { key: 'fusion', emoji: '🌯', label: '퓨전' },
+] as const;
+
+export const findSub = (key?: string | null) => KOREAN_SUBS.find((s) => s.key === key);
+
+// "한식 · 고기구이" 처럼 음식 종류와 세부 종류를 함께 표시
+export const cuisineLabel = (r: { cuisineType: string; subCuisine?: string | null }) =>
+  findSub(r.subCuisine) ? `${r.cuisineType} · ${findSub(r.subCuisine)!.label}` : r.cuisineType;
+
+// 1인 기준 가격대 (구글맵과 같은 구간)
+export const PRICE_BANDS = [
+  { key: 'u10', label: '$10 미만' },
+  { key: '10_20', label: '$10–20' },
+  { key: '20_30', label: '$20–30' },
+  { key: '30_50', label: '$30–50' },
+  { key: '50_100', label: '$50–100' },
+  { key: '100p', label: '$100 이상' },
+] as const;
+
+export const priceLabel = (band?: string | null) => PRICE_BANDS.find((p) => p.key === band)?.label;
+
 // 누구랑 가기 좋은지 (리뷰·시트의 situations)
 export const SITUATIONS = [
   { key: 'family', emoji: '👨‍👩‍👧', label: '가족 모임', desc: '가족끼리 편하게' },
