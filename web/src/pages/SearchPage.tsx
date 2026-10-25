@@ -31,7 +31,7 @@ function SearchPage() {
     const t = setTimeout(() => {
       setLoading(true);
       restaurantService
-        .getRestaurants({ search: q, limit: 50 })
+        .getRestaurants({ search: q, limit: 1000 })
         .then((res) => setResults(res.restaurants))
         .finally(() => setLoading(false));
     }, 200);

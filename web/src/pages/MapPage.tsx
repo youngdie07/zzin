@@ -48,7 +48,7 @@ function MapPage() {
   const [target, setTarget] = useState<[number, number] | null>(null);
 
   useEffect(() => {
-    const params: Record<string, unknown> = { limit: 200 };
+    const params: Record<string, unknown> = { limit: 1000 };
     if (cuisine !== '전체') params.cuisineType = cuisine;
     setLoading(true);
     restaurantService

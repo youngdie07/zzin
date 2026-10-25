@@ -9,6 +9,11 @@ const styles: Record<string, { emoji: string; from: string; to: string }> = {
   이탈리안: { emoji: '🍝', from: '#fccb90', to: '#d57eeb' },
   브런치: { emoji: '🥞', from: '#ffecd2', to: '#fcb69f' },
   퓨전: { emoji: '🌯', from: '#c471f5', to: '#fa71cd' },
+  바비큐: { emoji: '🍖', from: '#c79081', to: '#7b4397' },
+  인도: { emoji: '🍛', from: '#f7971e', to: '#ffd200' },
+  지중해: { emoji: '🥙', from: '#56ccf2', to: '#2f80ed' },
+  디저트: { emoji: '🍰', from: '#fbc2eb', to: '#a6c1ee' },
+  술집: { emoji: '🍺', from: '#f6d365', to: '#c79081' },
 };
 
 export const getCuisineStyle = (cuisine: string) =>

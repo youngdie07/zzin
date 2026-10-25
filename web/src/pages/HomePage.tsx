@@ -18,7 +18,7 @@ function HomePage() {
   const [noTip, setNoTip] = useState(false);
 
   useEffect(() => {
-    const params: Record<string, unknown> = { sort, limit: 50 };
+    const params: Record<string, unknown> = { sort, limit: 1000 };
     if (cuisine !== '전체') params.cuisineType = cuisine;
     activeTags.forEach((t) => (params[t] = true));
     if (keyword) params.keyword = keyword;
