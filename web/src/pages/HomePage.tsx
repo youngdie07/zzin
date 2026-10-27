@@ -4,8 +4,7 @@ import { Restaurant } from '../types';
 import { restaurantService } from '../services/restaurant.service';
 import RestaurantCard from '../components/RestaurantCard';
 import {
-  BETA_CUISINE, BETA_NOTICE, KOREAN_SUBS, NO_DISCRIMINATION, PROFILE_KEYS, ProfileKey, QUICK_KEYWORDS, QUICK_PALATE, SITUATIONS, findKeyword,
-  findPalate, profileFor,
+  BETA_CUISINE, BETA_NOTICE, KOREAN_SUBS, PROFILE_KEYS, ProfileKey, QUICK_KEYWORDS, SITUATIONS, findKeyword, profileFor,
 } from '../utils/cuisine';
 
 function HomePage() {
@@ -14,8 +13,6 @@ function HomePage() {
   const [loading, setLoading] = useState(true);
   const [sub, setSub] = useState('');
   const [situation, setSituation] = useState('');
-  const [noDiscrimination, setNoDiscrimination] = useState(false);
-  const [palate, setPalate] = useState('');
   const [sort, setSort] = useState('rating');
   const [profileFilter, setProfileFilter] = useState<Partial<Record<ProfileKey, string>>>({});
   const [query, setQuery] = useState('');
@@ -26,8 +23,6 @@ function HomePage() {
     const params: Record<string, unknown> = { sort, limit: 1000 };
     if (sub) params.subCuisine = sub;
     if (situation) params.situation = situation;
-    if (noDiscrimination) params.noDiscrimination = true;
-    if (palate) params.palate = palate;
     if (keyword) params.keyword = keyword;
     if (noTip) params.tip = 'none';
     Object.entries(profileFilter).forEach(([k, v]) => v && (params[k] = v));
@@ -38,7 +33,7 @@ function HomePage() {
       .then((res) => setRestaurants(res.restaurants))
       .catch((e) => console.error(e))
       .finally(() => setLoading(false));
-  }, [sub, situation, noDiscrimination, palate, sort, profileFilter, keyword, noTip]);
+  }, [sub, situation, sort, profileFilter, keyword, noTip]);
 
   const toggleProfile = (key: ProfileKey, value: string) =>
     setProfileFilter((prev) => ({ ...prev, [key]: prev[key] === value ? undefined : value }));
@@ -97,7 +92,7 @@ function HomePage() {
             <div key={k} className="filter-group">
               <span className="filter-group-title">{profileFor(k, BETA_CUISINE).title}</span>
               {profileFor(k, BETA_CUISINE)
-                .options.filter((o) => !o.hidden && !(k === 'priceValue' && o.value === 'fair') && !['mixed', 'ok'].includes(o.value))
+                .options.filter((o) => !o.hidden && o.value !== 'mixed')
                 .map((o) => (
                   <button
                     key={o.value}
@@ -114,21 +109,7 @@ function HomePage() {
 
         <div className="filter-groups" style={{ marginTop: 8 }}>
           <div className="filter-group">
-            <span className="filter-group-title">입맛 포인트</span>
-            {QUICK_PALATE.map((k) => {
-              const info = findPalate(k)!;
-              return (
-                <button key={k} className={`chip sm ${palate === k ? 'on' : ''}`} onClick={() => setPalate(palate === k ? '' : k)}>
-                  {info.emoji} {info.label}
-                </button>
-              );
-            })}
-          </div>
-          <div className="filter-group">
             <span className="filter-group-title">편의</span>
-            <button className={`chip sm ${noDiscrimination ? 'on' : ''}`} onClick={() => setNoDiscrimination(!noDiscrimination)}>
-              {NO_DISCRIMINATION.emoji} {NO_DISCRIMINATION.label}
-            </button>
             <button className={`chip sm ${noTip ? 'on' : ''}`} onClick={() => setNoTip(!noTip)}>
               💵 팁 안 줘도 돼요
             </button>

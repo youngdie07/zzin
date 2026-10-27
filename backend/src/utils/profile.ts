@@ -2,8 +2,6 @@ import { parseImages } from "./images";
 
 export const PROFILE_FIELDS = {
   authenticity: ['korean', 'classic', 'mixed', 'localized'],
-  expectation: ['high', 'comfort', 'casual'],
-  palateFit: ['good', 'ok', 'bad'],
   priceValue: ['great', 'fair', 'poor'],
   crowd: ['korean', 'mixed', 'local']
 } as const;
@@ -35,8 +33,6 @@ const distribution = (reviews: any[], key: ProfileKey) => {
 
 export const buildProfile = (reviews: any[]) => ({
   authenticity: distribution(reviews, 'authenticity'),
-  expectation: distribution(reviews, 'expectation'),
-  palateFit: distribution(reviews, 'palateFit'),
   priceValue: distribution(reviews, 'priceValue'),
   crowd: distribution(reviews, 'crowd')
 });
@@ -54,8 +50,7 @@ export const KEYWORD_KEYS = [
   'korean_staff', 'big_portion', 'banchan', 'parking', 'no_wait', 'waiting', 'drinks',
   'reservation', 'clean', 'kind', 'late', 'takeout', 'low_tip', 'delivery_only', 'food_truck', 'food_court'
 ] as const;
-export const PALATE_KEYS = ['salty', 'sweet', 'greasy', 'spicy', 'mild', 'rice', 'soup', 'hangover'] as const;
-export const SITUATION_KEYS = ['family', 'parents', 'kids', 'date', 'group', 'solo'] as const;
+export const SITUATION_KEYS = ['solo', 'friends', 'kids', 'group'] as const;
 const ORDER_TIP_MAX = 120;
 
 export const parseList = (value: unknown): string[] => {
@@ -77,9 +72,8 @@ const pickList = (value: unknown, allowed: readonly string[]) => {
 };
 
 export const sanitizeExtras = (body: Record<string, unknown>) => {
-  const out: { keywords?: string | null; palate?: string | null; situations?: string | null; menus?: string | null; orderTip?: string | null } = {};
+  const out: { keywords?: string | null; situations?: string | null; menus?: string | null; orderTip?: string | null } = {};
   if (body.keywords !== undefined) out.keywords = pickList(body.keywords, KEYWORD_KEYS);
-  if (body.palate !== undefined) out.palate = pickList(body.palate, PALATE_KEYS);
   if (body.situations !== undefined) out.situations = pickList(body.situations, SITUATION_KEYS);
   if (body.menus !== undefined) {
     const list = parseList(body.menus).map((m) => m.trim().slice(0, 30)).filter(Boolean).slice(0, 5);
@@ -108,7 +102,6 @@ const countKeys = (reviews: any[], field: string) =>
 
 export const buildHighlights = (reviews: any[]) => ({
   keywords: countKeys(reviews, 'keywords'),
-  palate: countKeys(reviews, 'palate'),
   situations: countKeys(reviews, 'situations'),
   menus: topCounts(reviews.flatMap((r) => parseList(r.menus)), 6, (s) => s.toLowerCase().replace(/\s+/g, '')),
   orderTips: reviews.map((r) => r.orderTip).filter(Boolean).slice(0, 5) as string[]
@@ -118,7 +111,6 @@ export const serializeReview = (r: any) => ({
   ...r,
   images: parseImages(r.images),
   keywords: parseList(r.keywords),
-  palate: parseList(r.palate),
   situations: parseList(r.situations),
   menus: parseList(r.menus)
 });

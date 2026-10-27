@@ -17,7 +17,7 @@
 .page-title { font-size: 26px; font-weight: 800; margin-bottom: 16px; }
 
 /* Situation cards */
-.situation-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.situation-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 .situation {
   display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left;
   background: #fff; border: 2px solid transparent; border-radius: 14px; padding: 14px;
@@ -192,8 +192,6 @@ textarea.input { resize: vertical; }
 }
 
 /* 입맛 포인트 / 주문 팁 */
-.badge.palate { background: #fff4e5; color: #c25e00; }
-.badge.palate b { margin-left: 4px; opacity: .7; }
 .order-tips { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; color: var(--text-medium); font-size: 14px; line-height: 1.5; }
 
 .sub-row { padding-top: 8px; }

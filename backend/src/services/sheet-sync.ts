@@ -39,8 +39,7 @@ export function parseCsv(input: string): string[][] {
 const COLUMNS: Record<string, string> = {
   '식당명': 'name', '한글명': 'nameKorean', '음식종류': 'cuisine', '세부종류': 'subCuisine', '주소': 'address', '가격대': 'price',
   '전화': 'phone', '영업상태': 'status', '본토느낌': 'authenticity', '맛스타일': 'authenticity',
-  '한식스타일': 'authenticity', '기대치': 'expectation', '기대치가이드': 'expectation',
-  '한국인입맛': 'palateFit', '입맛포인트': 'palate', '가성비': 'priceValue', '손님층': 'crowd',
+  '한식스타일': 'authenticity', '가성비': 'priceValue', '손님층': 'crowd',
   '팁': 'tip', '상황': 'situations', '누구랑': 'situations', '키워드': 'keywords', '추천메뉴': 'menus',
   '주문팁': 'orderTip', '한줄평': 'note', 'AI메모': 'aiNote', '검증완료': 'verified',
   '위도': 'lat', '경도': 'lng'
@@ -51,7 +50,7 @@ const headerKey = (h: string) => COLUMNS[h.replace(/\(.*?\)/g, '').replace(/\s+/
 
 // 오류 메시지에 쓸 칸 이름
 const COLUMN_NAMES: Record<string, string> = {
-  status: '영업상태', price: '가격대', subCuisine: '세부 종류', authenticity: '본토 느낌', expectation: '기대치', palateFit: '한국인 입맛', palate: '입맛 포인트', priceValue: '가성비',
+  status: '영업상태', price: '가격대', subCuisine: '세부 종류', authenticity: '본토 느낌', priceValue: '가성비',
   crowd: '손님층', tip: '팁', situations: '상황', keywords: '키워드'
 };
 
@@ -111,9 +110,6 @@ export async function syncSheet(prisma: PrismaClient, csv: string): Promise<Sync
 
     const editor = {
       editorAuthenticity: single('authenticity', 'authenticity'),
-      editorExpectation: single('expectation', 'expectation'),
-      editorPalateFit: single('palateFit', 'palateFit'),
-      editorPalate: JSON.stringify(multi('palate', 'palate')),
       editorPriceValue: single('priceValue', 'priceValue'),
       editorCrowd: single('crowd', 'crowd'),
       editorTip: single('tip', 'tip'),

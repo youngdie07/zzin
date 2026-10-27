@@ -13,12 +13,9 @@ export const reviewService = {
     atmosphereRating?: number;
     noDiscrimination?: boolean;
     authenticity?: string;
-    expectation?: string;
-    palateFit?: string;
     priceValue?: string;
     crowd?: string;
     keywords?: string[];
-    palate?: string[];
     situations?: string[];
     menus?: string[];
     orderTip?: string;

@@ -11,12 +11,9 @@ const SUMMARY_FIELDS = {
   rating: true,
   noDiscrimination: true,
   authenticity: true,
-  expectation: true,
-  palateFit: true,
   priceValue: true,
   crowd: true,
   keywords: true,
-  palate: true,
   situations: true,
   menus: true,
   orderTip: true,
@@ -76,14 +73,13 @@ export const getRestaurants = async (req: Request, res: Response) => {
       })
     ) as any[];
 
-    const profileFilters = (['authenticity', 'expectation', 'palateFit', 'priceValue', 'crowd'] as ProfileKey[]).filter((k) => req.query[k]);
+    const profileFilters = (['authenticity', 'priceValue', 'crowd'] as ProfileKey[]).filter((k) => req.query[k]);
     const keyword = req.query.keyword as string | undefined;
     const situation = req.query.situation as string | undefined;
     const has = (list: { key: string }[], key: string) => list.some((h) => h.key === key);
     const filtered = all
       .filter((r) => req.query.noDiscrimination !== 'true' || r.noDiscrimination)
       .filter((r) => !situation || has(r.highlights.situations, situation))
-      .filter((r) => !req.query.palate || has(r.highlights.palate, req.query.palate as string))
       .filter((r) => profileFilters.every((k) => r.profile[k].top === req.query[k]))
       .filter((r) => {
         const t = req.query.tip as string | undefined;

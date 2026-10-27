@@ -1,19 +1,16 @@
 import { parseList } from './profile';
 
 const EDITOR_FIELDS = [
-  'editorAuthenticity', 'editorExpectation', 'editorPalateFit', 'editorPalate', 'editorPriceValue', 'editorCrowd', 'editorTip',
+  'editorAuthenticity', 'editorPriceValue', 'editorCrowd', 'editorTip',
   'editorSituations', 'editorKeywords', 'editorMenus', 'editorOrderTip', 'editorNote', 'editorSource', 'editorAiNote', 'editorUpdatedAt'
 ] as const;
 
 export const buildEditor = (r: any) => {
   const editor = {
     authenticity: r.editorAuthenticity ?? null,
-    expectation: r.editorExpectation ?? null,
-    palateFit: r.editorPalateFit ?? null,
     priceValue: r.editorPriceValue ?? null,
     crowd: r.editorCrowd ?? null,
     tip: r.editorTip ?? null,
-    palate: parseList(r.editorPalate),
     situations: parseList(r.editorSituations),
     keywords: parseList(r.editorKeywords),
     menus: parseList(r.editorMenus),
@@ -25,8 +22,8 @@ export const buildEditor = (r: any) => {
     updatedAt: r.editorUpdatedAt ?? null
   };
   const hasAny =
-    editor.authenticity || editor.expectation || editor.palateFit || editor.priceValue || editor.crowd || editor.tip || editor.orderTip ||
-    editor.note || editor.palate.length || editor.situations.length || editor.keywords.length || editor.menus.length;
+    editor.authenticity || editor.priceValue || editor.crowd || editor.tip || editor.orderTip ||
+    editor.note || editor.situations.length || editor.keywords.length || editor.menus.length;
   return hasAny ? editor : null;
 };
 
@@ -50,16 +47,15 @@ const mergeKeys = (counted: { key: string; count: number }[], picked: string[]) 
 // 리뷰 집계 결과(profile/highlights/koreanStats)에 에디터 분류를 덮어씌움
 export const applyEditor = (o: any) => {
   const e = o.editor;
-  o.noDiscrimination = !!e?.situations.includes('noDiscrimination') || o.koreanStats.noDiscriminationCount > 0;
+  o.noDiscrimination = o.koreanStats.noDiscriminationCount > 0;
   if (!e) return o;
 
-  for (const k of ['authenticity', 'expectation', 'palateFit', 'priceValue', 'crowd'] as const) {
+  for (const k of ['authenticity', 'priceValue', 'crowd'] as const) {
     if (e[k]) o.profile[k] = { ...o.profile[k], top: e[k], editor: true };
   }
 
   o.highlights.keywords = mergeKeys(o.highlights.keywords, e.keywords);
-  o.highlights.palate = mergeKeys(o.highlights.palate, e.palate);
-  o.highlights.situations = mergeKeys(o.highlights.situations, e.situations.filter((s: string) => s !== 'noDiscrimination'));
+  o.highlights.situations = mergeKeys(o.highlights.situations, e.situations);
 
   const menuCounts = new Map<string, number>(o.highlights.menus.map((m: any) => [norm(m.name), m.count]));
   const editorMenuKeys = new Set(e.menus.map(norm));

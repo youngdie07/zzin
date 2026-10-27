@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { KeyCount, Restaurant } from '../types';
 import {
-  cuisineLabel, findKeyword, findOption, findPalate, findSituation, getCuisineStyle, priceLabel, PROFILE_KEYS,
+  cuisineLabel, findKeyword, findOption, findSituation, getCuisineStyle, priceLabel, PROFILE_KEYS,
 } from '../utils/cuisine';
 
 function RestaurantCard({ restaurant: r }: { restaurant: Restaurant }) {
@@ -19,12 +19,11 @@ function RestaurantCard({ restaurant: r }: { restaurant: Restaurant }) {
   }).filter(Boolean) as { key: string; text: string; pct: number }[];
 
   const room = Math.max(0, 4 - profileBadges.length);
-  const palateBadges = (r.highlights?.palate ?? []).filter(strong).map((h) => findPalate(h.key)).filter(Boolean).slice(0, 1);
   const situationBadges = (r.highlights?.situations ?? [])
     .filter(strong)
     .map((h) => findSituation(h.key))
     .filter(Boolean)
-    .slice(0, Math.max(0, room - palateBadges.length));
+    .slice(0, room);
 
   return (
     <Link to={`/restaurant/${r.id}`} className="r-card">
@@ -61,11 +60,6 @@ function RestaurantCard({ restaurant: r }: { restaurant: Restaurant }) {
           {profileBadges.map((b) => (
             <span key={b.key} className="badge profile">
               {b.text}
-            </span>
-          ))}
-          {palateBadges.map((b) => (
-            <span key={b!.key} className="badge palate">
-              {b!.emoji} {b!.label}
             </span>
           ))}
           {situationBadges.map((b) => (

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { reviewService } from '../services/review.service';
 import { restaurantService } from '../services/restaurant.service';
-import { TIP_OPTIONS, KEYWORDS, NO_DISCRIMINATION, PALATE, PROFILE_KEYS, ProfileKey, SITUATIONS, profileFor } from '../utils/cuisine';
+import { TIP_OPTIONS, KEYWORDS, PROFILE_KEYS, ProfileKey, SITUATIONS, profileFor } from '../utils/cuisine';
 
 function StarInput({ label, value, onChange }: { label: string; value: number; onChange: (n: number) => void }) {
   return (
@@ -29,10 +29,8 @@ function ReviewWritePage() {
   const [service, setService] = useState(5);
   const [atmosphere, setAtmosphere] = useState(5);
   const [content, setContent] = useState('');
-  const [noDiscrimination, setNoDiscrimination] = useState(true);
   const [profile, setProfile] = useState<Partial<Record<ProfileKey, string>>>({});
   const [situations, setSituations] = useState<string[]>([]);
-  const [palate, setPalate] = useState<string[]>([]);
   const [keywords, setKeywords] = useState<string[]>([]);
   const [menus, setMenus] = useState('');
   const [orderTip, setOrderTip] = useState('');
@@ -52,7 +50,6 @@ function ReviewWritePage() {
     setter((prev) => (prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k]));
   const toggleKeyword = toggleIn(setKeywords);
   const toggleSituation = toggleIn(setSituations);
-  const togglePalate = toggleIn(setPalate);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,10 +63,8 @@ function ReviewWritePage() {
         tasteRating: taste,
         serviceRating: service,
         atmosphereRating: atmosphere,
-        noDiscrimination,
         ...profile,
         situations,
-        palate,
         keywords,
         tipReport: tipReport || undefined,
         menus: menus.split(',').map((m) => m.trim()).filter(Boolean),
@@ -113,22 +108,6 @@ function ReviewWritePage() {
         ))}
 
         <div className="q-block">
-          <h4>입맛 포인트를 골라주세요 (여러 개)</h4>
-          <div className="kw-pick">
-            {PALATE.map((p) => (
-              <button
-                type="button"
-                key={p.key}
-                className={`chip ${palate.includes(p.key) ? 'on' : ''}`}
-                onClick={() => togglePalate(p.key)}
-              >
-                {p.emoji} {p.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="q-block">
           <h4>누구랑 가기 좋아요?</h4>
           <div className="kw-pick">
             {SITUATIONS.map((s) => (
@@ -141,13 +120,6 @@ function ReviewWritePage() {
                 {s.emoji} {s.label}
               </button>
             ))}
-            <button
-              type="button"
-              className={`chip ${noDiscrimination ? 'on' : ''}`}
-              onClick={() => setNoDiscrimination(!noDiscrimination)}
-            >
-              {NO_DISCRIMINATION.emoji} {NO_DISCRIMINATION.label}
-            </button>
           </div>
         </div>
 
@@ -204,7 +176,7 @@ function ReviewWritePage() {
         <textarea
           className="input"
           rows={6}
-          placeholder="한국인 입맛에는 어땠나요? 가족과 가기 좋은지, 직원 응대는 어땠는지도 알려주세요."
+          placeholder="한국에서 먹던 맛이랑 비교하면 어땠나요? 누구랑 가기 좋은지, 직원 응대는 어땠는지도 알려주세요."
           value={content}
           onChange={(e) => setContent(e.target.value)}
         />

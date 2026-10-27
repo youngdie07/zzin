@@ -230,8 +230,7 @@ async function main() {
           atmosphereRating: Math.max(1, rating - (u % 2)),
           noDiscrimination: flags.includes('d'),
           authenticity: flags.includes('a') ? 'korean' : flags.includes('k') ? 'mixed' : 'localized',
-          palateFit: flags.includes('k') ? 'good' : rating >= 4 ? 'ok' : 'bad',
-          situations: flags.includes('f') ? JSON.stringify(['family', 'kids', 'group']) : null,
+          situations: flags.includes('f') ? JSON.stringify(['kids', 'group']) : null,
           priceValue: rating >= 5 ? 'great' : rating >= 4 ? 'fair' : 'poor',
           keywords: JSON.stringify([
             ...(flags.includes('d') ? ['kind'] : []),

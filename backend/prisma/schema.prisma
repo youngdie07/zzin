@@ -56,13 +56,10 @@ model Restaurant {
 
   // 에디터(운영자)가 직접 정한 분류 - 시트에서 동기화. 값이 있으면 리뷰 집계보다 우선
   editorAuthenticity String?  // korean | classic | mixed | localized (본토 느낌 / 한식 스타일)
-  editorExpectation  String?  // high | comfort | casual (기대치 가이드)
-  editorPalateFit    String?  // good | ok | bad (한국인 입맛)
-  editorPalate       String?  // JSON 배열: 입맛 포인트 (salty, rice 등)
-  editorPriceValue   String?  // great | fair | poor
+  editorPriceValue   String?  // great | fair | poor (가성비 좋아요 / 적당해요 / 가격대 있어요)
   editorCrowd        String?  // korean | mixed | local
   editorTip          String?  // no_tip | included | optional | standard
-  editorSituations   String?  // JSON 배열: 누구랑 (family, parents, kids, date, group, solo) + noDiscrimination
+  editorSituations   String?  // JSON 배열: 누구랑 (solo, friends, kids, group)
   editorKeywords     String?  // JSON 배열
   editorMenus        String?  // JSON 배열
   editorOrderTip     String?  // 에디터 주문 팁
@@ -98,10 +95,7 @@ model Review {
 
   // 식당 성향 (집계해서 식당 프로필로 사용)
   authenticity    String?     // korean | classic | mixed | localized (한식: 요즘 한국 / 그 시절 / 미국식 한식)
-  expectation     String?     // high | comfort | casual (기대치 가이드)
-  palateFit       String?     // good | ok | bad (한국인 입맛에 맞는지)
-  palate          String?     // JSON 배열: 입맛 포인트 (salty, sweet, greasy, spicy, mild, rice, soup, hangover)
-  situations      String?     // JSON 배열: 누구랑 (family, parents, kids, date, group, solo)
+  situations      String?     // JSON 배열: 누구랑 (solo, friends, kids, group)
   orderTip        String?     // 한국인을 위한 주문 팁
   priceValue      String?     // great | fair | poor (가성비)
   crowd           String?     // korean | mixed | local (주 손님층)

@@ -33,12 +33,9 @@ export interface Restaurant {
   noDiscrimination: boolean;
   editor: {
     authenticity: string | null;
-    expectation: string | null;
-    palateFit: string | null;
     priceValue: string | null;
     crowd: string | null;
     tip: string | null;
-    palate: string[];
     situations: string[];
     keywords: string[];
     menus: string[];
@@ -51,7 +48,6 @@ export interface Restaurant {
   businessStatus?: string;
   highlights: {
     keywords: KeyCount[];
-    palate: KeyCount[];
     situations: KeyCount[];
     menus: { name: string; count: number; editor?: boolean }[];
     orderTips: string[];
@@ -90,8 +86,6 @@ export interface TipInfo {
 
 export interface RestaurantProfile {
   authenticity: ProfileDist;
-  expectation: ProfileDist;
-  palateFit: ProfileDist;
   priceValue: ProfileDist;
   crowd: ProfileDist;
 }
@@ -115,12 +109,9 @@ export interface Review {
   atmosphereRating?: number;
   noDiscrimination: boolean;
   authenticity?: string | null;
-  expectation?: string | null;
-  palateFit?: string | null;
   priceValue?: string | null;
   crowd?: string | null;
   keywords?: string[];
-  palate?: string[];
   situations?: string[];
   menus?: string[];
   orderTip?: string | null;

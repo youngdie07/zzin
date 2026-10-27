@@ -59,41 +59,20 @@ export const priceLabel = (band?: string | null) => PRICE_BANDS.find((p) => p.ke
 
 // 누구랑 가기 좋은지 (리뷰·시트의 situations)
 export const SITUATIONS = [
-  { key: 'family', emoji: '👨‍👩‍👧', label: '가족 모임', desc: '가족끼리 편하게' },
-  { key: 'parents', emoji: '👵', label: '부모님 모시고', desc: '어른들 입맛·분위기에 맞아요' },
-  { key: 'kids', emoji: '👶', label: '아이 동반', desc: '아이와 가기 편해요' },
-  { key: 'date', emoji: '💑', label: '데이트', desc: '분위기 좋아요' },
-  { key: 'group', emoji: '🍻', label: '회식·단체', desc: '여럿이 가기 좋아요' },
   { key: 'solo', emoji: '🧍', label: '혼밥', desc: '혼자 가도 편해요' },
+  { key: 'friends', emoji: '🙌', label: '친구랑', desc: '친구·연인과 가볍게' },
+  { key: 'kids', emoji: '👶', label: '아이 동반', desc: '아이와 가기 편해요' },
+  { key: 'group', emoji: '🍻', label: '단체', desc: '가족 모임·회식처럼 여럿이' },
 ] as const;
 
 export const findSituation = (key: string) => SITUATIONS.find((s) => s.key === key);
-
-export const NO_DISCRIMINATION = { emoji: '🛡️', label: '차별 없음', desc: '인종차별 걱정 없이 편해요' };
-
-// 한국인 입맛 포인트 (왜 입맛에 맞는지/안 맞는지)
-export const PALATE = [
-  { key: 'salty', emoji: '🧂', label: '많이 짜요' },
-  { key: 'sweet', emoji: '🍯', label: '많이 달아요' },
-  { key: 'greasy', emoji: '🧈', label: '느끼해요' },
-  { key: 'spicy', emoji: '🌶️', label: '매콤해요' },
-  { key: 'mild', emoji: '🍃', label: '담백해요' },
-  { key: 'rice', emoji: '🍚', label: '밥 생각나는 맛' },
-  { key: 'soup', emoji: '🍲', label: '국물 있음' },
-  { key: 'hangover', emoji: '🥣', label: '해장 가능' },
-] as const;
-
-export const findPalate = (key: string) => PALATE.find((p) => p.key === key);
-
-// 홈 화면 입맛 필터에 노출할 포인트 (찾아가고 싶은 이유가 되는 것만)
-export const QUICK_PALATE = ['spicy', 'mild', 'rice', 'soup', 'hangover'];
 
 // 본토 느낌: 음식 종류마다 "어느 나라 맛"인지
 const ORIGINS: Record<string, string> = {
   한식: '한국', 일식: '일본', 중식: '중국', 태국: '태국', 멕시칸: '멕시코', 베트남: '베트남', 이탈리안: '이탈리아', 인도: '인도', 바비큐: '텍사스',
 };
 
-export type ProfileKey = 'authenticity' | 'expectation' | 'palateFit' | 'priceValue' | 'crowd';
+export type ProfileKey = 'authenticity' | 'priceValue' | 'crowd';
 
 // hidden: 예전 값이라 표시만 하고 리뷰·필터에선 고르지 않음
 type ProfileOption = { value: string; emoji: string; label: string; short: string; desc: string; hidden?: boolean };
@@ -135,31 +114,13 @@ const authenticityFor = (cuisine?: string): ProfileDef => {
 
 export const PROFILE: Record<ProfileKey, ProfileDef> = {
   authenticity: authenticityFor(),
-  expectation: {
-    title: '기대치 가이드',
-    question: '한국 맛 기준으로 어느 정도 기대하면 될까요?',
-    options: [
-      { value: 'high', emoji: '👍', label: '한국 맛 기대해도 돼요', short: '한국 맛 기대해도 돼요', desc: '한국에서 온 사람도 만족할 맛' },
-      { value: 'comfort', emoji: '🍚', label: '그리울 때 무난한 한 끼', short: '그리울 때 무난한 한 끼', desc: '한국 음식 생각날 때 편하게' },
-      { value: 'casual', emoji: '🤝', label: '현지 친구랑 가기 좋아요', short: '현지 친구랑 가기 좋아요', desc: '한식 처음인 친구와 가볍게' },
-    ],
-  },
-  palateFit: {
-    title: '한국인 입맛',
-    question: '한국 사람 입맛에 맞았어요?',
-    options: [
-      { value: 'good', emoji: '😋', label: '잘 맞아요', short: '한국인 입맛에 맞음', desc: '한국 사람이 좋아할 맛' },
-      { value: 'ok', emoji: '🙂', label: '무난해요', short: '입맛 무난', desc: '호불호 없이 먹을 만함' },
-      { value: 'bad', emoji: '😕', label: '안 맞아요', short: '입맛 안 맞음', desc: '짜거나 달거나 느끼해서 아쉬움' },
-    ],
-  },
   priceValue: {
     title: '가성비',
     question: '가격 대비 어땠어요?',
     options: [
-      { value: 'great', emoji: '💰', label: '가성비 좋음', short: '가성비 좋음', desc: '가격보다 훨씬 만족' },
-      { value: 'fair', emoji: '👌', label: '가격만큼', short: '가격만큼', desc: '낸 만큼은 함' },
-      { value: 'poor', emoji: '💸', label: '아쉬움', short: '가격 대비 아쉬움', desc: '비싸거나 퀄리티가 아쉬움' },
+      { value: 'great', emoji: '💰', label: '가성비 좋아요', short: '가성비 좋아요', desc: '가격보다 훨씬 만족' },
+      { value: 'fair', emoji: '👌', label: '적당해요', short: '가격 적당', desc: '낸 만큼 만족' },
+      { value: 'poor', emoji: '💎', label: '가격대 있어요', short: '가격대 있음', desc: '특별한 날 가기 좋은 가격' },
     ],
   },
   crowd: {
@@ -202,7 +163,7 @@ export const KEYWORDS = [
 export const findKeyword = (key: string) => KEYWORDS.find((k) => k.key === key);
 
 // 홈 화면 빠른 필터에 노출할 키워드
-export const QUICK_KEYWORDS = ['korean_staff', 'parking', 'drinks', 'takeout'];
+export const QUICK_KEYWORDS = ['korean_staff', 'drinks'];
 
 export const TIP_OPTIONS = [
   { value: 'no_tip', emoji: '💵', label: '팁 안 받아요', short: '팁 없음', desc: '노팁 정책, 팁을 받지 않음' },

@@ -5,19 +5,14 @@ export const LABELS = {
     '본토 맛 그대로': 'korean', '한국 맛 그대로': 'korean', 반반: 'mixed', 미국식: 'localized', 현지화됨: 'localized',
     '체인점 스타일': 'localized', '요즘 한국 스타일': 'korean', '그 시절 한국 맛': 'classic', '미국식 한식': 'localized'
   },
-  // 기대치 가이드: 한국 맛 기준으로 어느 정도 기대하면 되는지
-  expectation: { '한국 맛 기대해도 돼요': 'high', '그리울 때 무난한 한 끼': 'comfort', '현지 친구랑 가기 좋아요': 'casual' },
-  palateFit: { '잘 맞아요': 'good', 무난해요: 'ok', '안 맞아요': 'bad' },
-  palate: {
-    '많이 짜요': 'salty', '많이 달아요': 'sweet', 느끼해요: 'greasy', 매콤해요: 'spicy', 담백해요: 'mild',
-    '밥 생각나는 맛': 'rice', '국물 있음': 'soup', '해장 가능': 'hangover'
-  },
-  priceValue: { '가성비 좋음': 'great', 가격만큼: 'fair', 아쉬움: 'poor' },
+  // 예전 표기(가성비 좋음/가격만큼/아쉬움)도 인정
+  priceValue: { '가성비 좋아요': 'great', 적당해요: 'fair', '가격대 있어요': 'poor', '가성비 좋음': 'great', 가격만큼: 'fair', 아쉬움: 'poor' },
   crowd: { '한국인 많음': 'korean', 반반: 'mixed', '현지인 많음': 'local' },
   tip: { '팁 안 받아요': 'no_tip', '팁 포함': 'included', '팁 선택': 'optional', '팁 필수': 'standard' },
+  // 예전 표기(가족 모임·부모님 모시고·회식·단체 → 단체, 데이트 → 친구랑)도 인정
   situations: {
-    '가족 모임': 'family', '부모님 모시고': 'parents', '아이 동반': 'kids', 데이트: 'date', '회식·단체': 'group', 혼밥: 'solo',
-    '차별 없음': 'noDiscrimination'
+    혼밥: 'solo', 친구랑: 'friends', '아이 동반': 'kids', 단체: 'group',
+    '가족 모임': 'group', '부모님 모시고': 'group', '회식·단체': 'group', 데이트: 'friends'
   },
   keywords: {
     '한국어 주문 가능': 'korean_staff', '양 푸짐': 'big_portion', '반찬 리필': 'banchan', '주차 편함': 'parking',
